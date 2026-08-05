@@ -27,7 +27,15 @@ Horde immer stärker wird.
   Button rechts unten = Dash (kurz unverwundbar). Am Desktop: WASD / Pfeiltasten, Leertaste = Dash, Esc = Pause.
 * **Level-Ups:** Blaue Kristalle einsammeln, dann eine von drei zufälligen
   Verbesserungen wählen (16 Upgrades, u. a. Schaden, Feuerrate, Durchschlag,
-  Schutzkugeln, Sprengmunition).
+  Schutzkugeln, Sprengmunition). Jedes lässt sich bis **Stufe 10** ausbauen.
+* **Fundstücke:** In unregelmäßigen Abständen erscheinen zwei Dinge in der Arena,
+  beide an einer Lichtsäule von weitem erkennbar:
+  * 💣 **Bombe** — löscht auf einen Schlag alle Zombies aus, **Bosse überleben**.
+    Die Gefallenen zählen als Kills und lassen ihre Kristalle fallen.
+  * ❤️ **Herz** — schenkt 35 % des maximalen Lebens zurück, mindestens 30.
+
+  Höchstens drei liegen gleichzeitig herum, und nie direkt vor den Füßen — man
+  muss hingehen, was mitten in der Horde eine Abwägung ist.
 * **Gegner:** Walker, Runner, Brute, Spitter und Bomber — Leben, Tempo und
   Schaden skalieren mit der Überlebenszeit. Alle ~105 Sekunden kommt ein Boss.
 * **Highscore:** `Überlebenszeit × 5 + Kills × 10`. Die **fünf besten Läufe** stehen

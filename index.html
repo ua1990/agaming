@@ -305,7 +305,7 @@ const STR = {
     newRecord: '🏆 NEUER HIGHSCORE!',
     bestRun: (s, c, t, k) => `Bester Lauf: <b>${s}</b> Punkte mit ${c} · ${t} · ${k} Kills`,
     again: 'NOCHMAL', character: 'Charakter',
-    tSurvive: 'ÜBERLEBE!', tBoss: 'BOSS!', tBossDown: 'BOSS BESIEGT!',
+    tSurvive: 'ÜBERLEBE!', tBomb: n => 'BOMBE! ' + n + ' ausgelöscht', tHeart: n => '+' + n + ' LEBEN', tBoss: 'BOSS!', tBossDown: 'BOSS BESIEGT!',
     noWebgl: 'Dein Browser unterstützt kein WebGL-Instancing. Bitte öffne das Spiel in Chrome, Safari oder Firefox (aktuelle Version).',
     lostCtx: 'Grafik konnte nicht wiederhergestellt werden – bitte die Seite neu laden.',
   },
@@ -331,7 +331,7 @@ const STR = {
     newRecord: '🏆 YENİ REKOR!',
     bestRun: (s, c, t, k) => `En iyi tur: <b>${s}</b> puan, ${c} ile · ${t} · ${k} öldürme`,
     again: 'TEKRAR', character: 'Karakter',
-    tSurvive: 'HAYATTA KAL!', tBoss: 'BOSS!', tBossDown: 'BOSS YENİLDİ!',
+    tSurvive: 'HAYATTA KAL!', tBomb: n => 'BOMBA! ' + n + ' yok edildi', tHeart: n => '+' + n + ' CAN', tBoss: 'BOSS!', tBossDown: 'BOSS YENİLDİ!',
     noWebgl: 'Tarayıcın WebGL instancing desteklemiyor. Lütfen oyunu güncel bir Chrome, Safari veya Firefox ile aç.',
     lostCtx: 'Grafik geri yüklenemedi – lütfen sayfayı yenile.',
   }
@@ -902,22 +902,22 @@ const weaponDps = w => w.gun.dmg * w.gun.count / w.gun.rate + (w.gun.splashDmg |
 
 /* ------------------------------- Upgrades -------------------------------- */
 const UPGRADES = [
-  { id: 'dmg', ic: '💥', nm: { de: 'Zerstörung', tr: 'Yıkım' }, ds: { de: 'Schaden +20 %', tr: 'Hasar +%20' }, max: 8, ap: p => p.dmgMul *= 1.20 },
-  { id: 'rate', ic: '⚙️', nm: { de: 'Schnellfeuer', tr: 'Seri Ateş' }, ds: { de: 'Feuerrate +15 %', tr: 'Atış hızı +%15' }, max: 8, ap: p => p.rateMul *= 0.87 },
-  { id: 'spd', ic: '👟', nm: { de: 'Turnschuhe', tr: 'Koşu Ayakkabısı' }, ds: { de: 'Tempo +9 %', tr: 'Hız +%9' }, max: 6, ap: p => p.spdMul *= 1.09 },
-  { id: 'hp', ic: '❤️', nm: { de: 'Zäh', tr: 'Dayanıklı' }, ds: { de: 'Max. HP +28 & heilt', tr: 'Maks. can +28 ve iyileşir' }, max: 8, ap: p => { p.maxHp += 28; p.hp = Math.min(p.maxHp, p.hp + 28); } },
-  { id: 'rng', ic: '🔭', nm: { de: 'Zielfernrohr', tr: 'Dürbün' }, ds: { de: 'Reichweite +14 %', tr: 'Menzil +%14' }, max: 5, ap: p => p.rangeMul *= 1.14 },
-  { id: 'proj', ic: '🔱', nm: { de: 'Mehr Blei', tr: 'Daha Fazla Kurşun' }, ds: { de: '+1 Projektil', tr: '+1 mermi' }, max: 3, ap: p => p.extraProj++ },
-  { id: 'pier', ic: '🗡️', nm: { de: 'Durchschlag', tr: 'Delip Geçme' }, ds: { de: 'Kugeln durchbohren +1', tr: 'Mermiler +1 düşman deler' }, max: 3, ap: p => p.pierce++ },
-  { id: 'crit', ic: '🎲', nm: { de: 'Glückstreffer', tr: 'Şanslı Vuruş' }, ds: { de: 'Krit-Chance +9 % (×2.6)', tr: 'Kritik şans +%9 (×2,6)' }, max: 6, ap: p => p.crit += 0.09 },
-  { id: 'regen', ic: '🩹', nm: { de: 'Regeneration', tr: 'Yenilenme' }, ds: { de: '+0,7 HP pro Sekunde', tr: 'Saniyede +0,7 can' }, max: 5, ap: p => p.regen += 0.7 },
-  { id: 'mag', ic: '🧲', nm: { de: 'Magnet', tr: 'Mıknatıs' }, ds: { de: 'Sammelradius +55 %', tr: 'Toplama yarıçapı +%55' }, max: 4, ap: p => p.magnet *= 1.55 },
-  { id: 'dash', ic: '💨', nm: { de: 'Reflexe', tr: 'Refleks' }, ds: { de: 'Dash lädt 25 % schneller', tr: 'Atılım %25 daha hızlı dolar' }, max: 4, ap: p => p.dashCd *= 0.75 },
-  { id: 'armor', ic: '🛡️', nm: { de: 'Panzerung', tr: 'Zırh' }, ds: { de: 'Schaden −13 %', tr: 'Alınan hasar −%13' }, max: 5, ap: p => p.armor = Math.min(0.65, p.armor + 0.13) },
-  { id: 'orb', ic: '💠', nm: { de: 'Schutzkugel', tr: 'Koruma Küresi' }, ds: { de: '+1 kreisende Kugel', tr: '+1 dönen küre' }, max: 5, ap: p => p.orbs++ },
-  { id: 'boom', ic: '🧨', nm: { de: 'Sprengmunition', tr: 'Patlayıcı Mermi' }, ds: { de: 'Treffer explodieren', tr: 'İsabetler patlar' }, max: 3, ap: p => { p.boom += 1; } },
-  { id: 'steal', ic: '🧛', nm: { de: 'Lebensraub', tr: 'Can Çalma' }, ds: { de: '+3 % geheiltes Leben', tr: "Verilen hasarın %3'ü can olur" }, max: 4, ap: p => p.lifesteal += 0.03 },
-  { id: 'xp', ic: '📘', nm: { de: 'Erfahrung', tr: 'Tecrübe' }, ds: { de: '+22 % EP', tr: '+%22 TP' }, max: 4, ap: p => p.xpMul *= 1.22 },
+  { id: 'dmg', ic: '💥', nm: { de: 'Zerstörung', tr: 'Yıkım' }, ds: { de: 'Schaden +20 %', tr: 'Hasar +%20' }, max: 10, ap: p => p.dmgMul *= 1.20 },
+  { id: 'rate', ic: '⚙️', nm: { de: 'Schnellfeuer', tr: 'Seri Ateş' }, ds: { de: 'Feuerrate +15 %', tr: 'Atış hızı +%15' }, max: 10, ap: p => p.rateMul *= 0.87 },
+  { id: 'spd', ic: '👟', nm: { de: 'Turnschuhe', tr: 'Koşu Ayakkabısı' }, ds: { de: 'Tempo +9 %', tr: 'Hız +%9' }, max: 10, ap: p => p.spdMul *= 1.09 },
+  { id: 'hp', ic: '❤️', nm: { de: 'Zäh', tr: 'Dayanıklı' }, ds: { de: 'Max. HP +28 & heilt', tr: 'Maks. can +28 ve iyileşir' }, max: 10, ap: p => { p.maxHp += 28; p.hp = Math.min(p.maxHp, p.hp + 28); } },
+  { id: 'rng', ic: '🔭', nm: { de: 'Zielfernrohr', tr: 'Dürbün' }, ds: { de: 'Reichweite +14 %', tr: 'Menzil +%14' }, max: 10, ap: p => p.rangeMul *= 1.14 },
+  { id: 'proj', ic: '🔱', nm: { de: 'Mehr Blei', tr: 'Daha Fazla Kurşun' }, ds: { de: '+1 Projektil', tr: '+1 mermi' }, max: 10, ap: p => p.extraProj++ },
+  { id: 'pier', ic: '🗡️', nm: { de: 'Durchschlag', tr: 'Delip Geçme' }, ds: { de: 'Kugeln durchbohren +1', tr: 'Mermiler +1 düşman deler' }, max: 10, ap: p => p.pierce++ },
+  { id: 'crit', ic: '🎲', nm: { de: 'Glückstreffer', tr: 'Şanslı Vuruş' }, ds: { de: 'Krit-Chance +9 % (×2.6)', tr: 'Kritik şans +%9 (×2,6)' }, max: 10, ap: p => p.crit += 0.09 },
+  { id: 'regen', ic: '🩹', nm: { de: 'Regeneration', tr: 'Yenilenme' }, ds: { de: '+0,7 HP pro Sekunde', tr: 'Saniyede +0,7 can' }, max: 10, ap: p => p.regen += 0.7 },
+  { id: 'mag', ic: '🧲', nm: { de: 'Magnet', tr: 'Mıknatıs' }, ds: { de: 'Sammelradius +55 %', tr: 'Toplama yarıçapı +%55' }, max: 10, ap: p => p.magnet *= 1.55 },
+  { id: 'dash', ic: '💨', nm: { de: 'Reflexe', tr: 'Refleks' }, ds: { de: 'Dash lädt 25 % schneller', tr: 'Atılım %25 daha hızlı dolar' }, max: 10, ap: p => p.dashCd *= 0.75 },
+  { id: 'armor', ic: '🛡️', nm: { de: 'Panzerung', tr: 'Zırh' }, ds: { de: 'Schaden −13 %', tr: 'Alınan hasar −%13' }, max: 10, ap: p => p.armor = Math.min(0.65, p.armor + 0.13) },
+  { id: 'orb', ic: '💠', nm: { de: 'Schutzkugel', tr: 'Koruma Küresi' }, ds: { de: '+1 kreisende Kugel', tr: '+1 dönen küre' }, max: 10, ap: p => p.orbs++ },
+  { id: 'boom', ic: '🧨', nm: { de: 'Sprengmunition', tr: 'Patlayıcı Mermi' }, ds: { de: 'Treffer explodieren', tr: 'İsabetler patlar' }, max: 10, ap: p => { p.boom += 1; } },
+  { id: 'steal', ic: '🧛', nm: { de: 'Lebensraub', tr: 'Can Çalma' }, ds: { de: '+3 % geheiltes Leben', tr: "Verilen hasarın %3'ü can olur" }, max: 10, ap: p => p.lifesteal += 0.03 },
+  { id: 'xp', ic: '📘', nm: { de: 'Erfahrung', tr: 'Tecrübe' }, ds: { de: '+22 % EP', tr: '+%22 TP' }, max: 10, ap: p => p.xpMul *= 1.22 },
 ];
 
 /* ------------------------------ Gegner-Typen ----------------------------- */
@@ -945,6 +945,7 @@ const G = {
   char: CHARS[0], wp: weaponById(CHARS[0].wp),   // nie leer: Stammwaffe ist vorgewählt
   p: null,
   enemies: [], bullets: [], ebullets: [], orbs: [], parts: [], decals: [], props: [], pops: [],
+  pickups: [], nextBomb: 0, nextHeart: 0,
   spawnAcc: 0, nextBoss: 100, boss: null, bossCount: 0, lvlQueue: 0,
   shake: 0, camX: 0, camZ: 0, flash: 0,
 };
@@ -1001,6 +1002,54 @@ function buildProps() {
   for (let i = 0; i < 56; i++) {
     const a = i / 56 * TAU;
     G.props.push({ kind: 'post', x: Math.cos(a) * ARENA, z: Math.sin(a) * ARENA, r: -a, s: 1, tint: 1 });
+  }
+}
+
+/* ------------------------------- Fundstücke ------------------------------ */
+const MAX_PICKUPS = 3;
+/* Sucht einen freien Platz in Sichtweite, aber nicht direkt vor den Füßen —
+   man soll hingehen müssen, statt es nebenbei aufzusammeln. */
+function spawnPickup(kind) {
+  if (G.pickups.length >= MAX_PICKUPS) return;
+  const p = G.p;
+  for (let versuch = 0; versuch < 24; versuch++) {
+    const a = Math.random() * TAU, d = rnd(9, 22);
+    const x = p.x + Math.cos(a) * d, z = p.z + Math.sin(a) * d;
+    if (Math.hypot(x, z) > ARENA - 3) continue;
+    let frei = true;
+    for (const pr of G.props) {
+      if (pr.kind === 'post') continue;
+      if (Math.hypot(x - pr.x, z - pr.z) < 1.6 + pr.s) { frei = false; break; }
+    }
+    if (!frei) continue;
+    G.pickups.push({ kind, x, z, ph: Math.random() * TAU, t: 0 });
+    return;
+  }
+}
+/* Die Bombe räumt das Feld — Bosse überstehen sie. */
+function detonateBomb(x, z) {
+  let gefallen = 0;
+  for (const e of G.enemies.slice()) {
+    if (e.dead || e.T.boss) continue;
+    killEnemy(e); gefallen++;
+  }
+  spawnParts(x, 1.0, z, 40, [1, .82, .35], 17, .8, .34, 12);
+  spawnParts(x, 0.6, z, 18, [.9, .35, .12], 12, .9, .30, 9);
+  addDecal(x, z, 7, [.07, .05, .04], 16);
+  G.shake = 1.35; G.flash = 1;
+  sfx('boom', 1); buzz([50, 40, 90]);
+  toast(t('tBomb')(gefallen), '#ffd76a');
+  return gefallen;
+}
+function collectPickup(pu) {
+  const p = G.p;
+  if (pu.kind === 'bomb') detonateBomb(pu.x, pu.z);
+  else {
+    const heil = Math.max(30, Math.round(p.maxHp * 0.35));
+    p.hp = Math.min(p.maxHp, p.hp + heil);
+    spawnParts(pu.x, 1.0, pu.z, 16, [.35, 1, .5], 7, .6, .18, 6);
+    sfx('xp', 1.4); buzz(18);
+    toast(t('tHeart')(heil), '#7dff9a');
   }
 }
 
@@ -1389,6 +1438,9 @@ function update(dt) {
     if (G.enemies.length < cap) spawnEnemy(pickType());
   }
   if (G.t >= G.nextBoss) { G.nextBoss += 105; spawnEnemy('boss', 24); }
+  // Fundstücke tauchen in unregelmäßigen Abständen auf
+  if (G.t >= G.nextBomb) { G.nextBomb = G.t + rnd(48, 78); spawnPickup('bomb'); }
+  if (G.t >= G.nextHeart) { G.nextHeart = G.t + rnd(24, 40); spawnPickup('heart'); }
   G.wave = 1 + Math.floor(G.t / 30);
 
   rebuildGrid();
@@ -1529,6 +1581,13 @@ function update(dt) {
       }
     }
     for (const e of G.enemies) if (e.orbCd > 0) e.orbCd -= dt;
+  }
+
+  /* --- Fundstücke --- */
+  for (let i = G.pickups.length - 1; i >= 0; i--) {
+    const pu = G.pickups[i];
+    pu.t += dt; pu.ph += dt * 2.2;
+    if (Math.hypot(p.x - pu.x, p.z - pu.z) < 1.15) { G.pickups.splice(i, 1); collectPickup(pu); }
   }
 
   /* --- EP-Kristalle --- */
@@ -1823,6 +1882,29 @@ function drawWorld() {
       addShadow(o.x, o.z, .55, .18);
     }
   }
+  // Fundstücke: Bombe und Herz, je mit Lichtsäule zum Auffinden
+  for (const pu of G.pickups) {
+    const schweb = Math.sin(pu.ph) * 0.14;
+    const puls = 0.55 + 0.45 * Math.sin(pu.ph * 1.7);
+    const y = 0.95 + schweb;
+    if (pu.kind === 'bomb') {
+      addSph(pu.x, y, pu.z, .78, .74, .78, 0, pu.ph * .4, 0, [.10, .11, .13]);
+      addBox(pu.x, y + .48, pu.z, .16, .26, .16, 0, pu.ph * .4, 0, [.32, .26, .18]);
+      push(batches.gSph, pu.x, y + .70, pu.z, .30 * puls, .30 * puls, .30 * puls, 0, 0, 0, 1, .72, .22, 1);
+      push(batches.gSph, pu.x, y, pu.z, 1.9, 1.9, 1.9, 0, 0, 0, .9, .45, .12, .16 * puls);
+      push(batches.gBox, pu.x, 3.2, pu.z, .34, 6.0, .34, 0, 0, 0, 1, .62, .18, .13 * puls);
+      addShadow(pu.x, pu.z, 1.5, .34);
+    } else {
+      // Herz aus zwei Kugeln und einem gekippten Würfel
+      const c = [.92, .16, .28];
+      addSph(pu.x - .21, y + .12, pu.z, .46, .46, .40, 0, 0, 0, c);
+      addSph(pu.x + .21, y + .12, pu.z, .46, .46, .40, 0, 0, 0, c);
+      addBox(pu.x, y - .10, pu.z, .52, .52, .38, 0, 0, .7854, c);
+      push(batches.gSph, pu.x, y, pu.z, 1.7, 1.7, 1.7, 0, 0, 0, 1, .25, .38, .17 * puls);
+      push(batches.gBox, pu.x, 3.2, pu.z, .30, 6.0, .30, 0, 0, 0, 1, .28, .40, .12 * puls);
+      addShadow(pu.x, pu.z, 1.3, .30);
+    }
+  }
   // Partikel
   for (const q of G.parts) {
     const a = clamp(q.l / q.ml, 0, 1);
@@ -2083,6 +2165,7 @@ function startGame() {
   G.t = 0; G.kills = 0; G.wave = 1; G.spawnAcc = 0; G.nextBoss = 100; G.bossCount = 0; G.boss = null; G.lvlQueue = 0;
   G.enemies.length = 0; G.bullets.length = 0; G.ebullets.length = 0; G.orbs.length = 0;
   G.parts.length = 0; G.decals.length = 0; G.pops.length = 0;
+  G.pickups.length = 0; G.nextBomb = rnd(45, 65); G.nextHeart = rnd(20, 34);
   G.shake = 0; G.flash = 0; G.camX = 0; G.camZ = 0;
   for (const k in _hud) delete _hud[k];
   buildProps();
