@@ -39,8 +39,13 @@ Horde immer stärker wird.
   Höchstens drei liegen gleichzeitig herum, und nie direkt vor den Füßen — man
   muss hingehen, was mitten in der Horde eine Abwägung ist. Ist die Grenze
   erreicht, verdrängt eine fällige Bombe das älteste Herz, damit ihr Takt hält.
+* **Ziel:** Nach **15 Minuten** erwacht der Endgegner, *Der letzte Amınoğlu*. Wer ihn
+  niederringt, gewinnt — mit 5000 Punkten Aufschlag. Die Zeitanzeige zählt in der
+  zweiten Hälfte zu ihm herunter.
 * **Gegner:** Walker, Runner, Brute, Spitter und Bomber — Leben, Tempo und
-  Schaden skalieren mit der Überlebenszeit. Alle ~105 Sekunden kommt ein Boss.
+  Schaden skalieren mit der Überlebenszeit, der Zuwachs zieht später an. Alle
+  ~105 Sekunden kommt ein Boss. Ab fünf Minuten wird ein wachsender Teil der
+  Horde zu **Elitegegnern**: mehr als doppelt so zäh, kräftiger eingefärbt.
 * **Highscore:** `Überlebenszeit × 5 + Kills × 10`. Die **fünf besten Läufe** stehen
   in einer Bestenliste, erreichbar über das Titelmenü und direkt nach dem Tod, dort
   mit dem gerade gespielten Lauf hervorgehoben. Jeder Eintrag nennt Charakter,

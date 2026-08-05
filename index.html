@@ -131,6 +131,7 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
 
 /* ---- Game Over ---- */
 #overScreen h1{background:linear-gradient(180deg,#ffc7c7,#ff5a5a 50%,#a51f1f);-webkit-background-clip:text;background-clip:text}
+#overScreen h1.sieg{background:linear-gradient(180deg,#fff3c4,#ffd23f 45%,#c98a00);-webkit-background-clip:text;background-clip:text}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:9px;width:100%;max-width:380px;margin:18px 0 6px}
 .sbox{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:13px;padding:11px;text-align:center}
 .sbox .lb{font-size:9.5px;color:#8b97ab;letter-spacing:1.4px;text-transform:uppercase;font-weight:800}
@@ -248,7 +249,7 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
 
   <!-- Game Over -->
   <div id="overScreen" class="screen hidden">
-    <h1 data-i18n="gameOver">GAME OVER</h1>
+    <h1>GAME OVER</h1>
     <div class="sub" id="overWho">Ahmet ist gefallen</div>
     <div class="stats">
       <div class="sbox"><div class="lb" data-i18n="survived">Überlebt</div><div class="vl" id="oTime">0:00</div></div>
@@ -324,7 +325,10 @@ const STR = {
     newRecord: '🏆 NEUER HIGHSCORE!',
     bestRun: (s, c, t, k) => `Bester Lauf: <b>${s}</b> Punkte mit ${c} · ${t} · ${k} Kills`,
     again: 'NOCHMAL', character: 'Charakter',
-    tSurvive: 'ÜBERLEBE!', tBomb: n => 'BOMBE! ' + n + ' ausgelöscht', tHeart: n => '+' + n + ' LEBEN', tBoss: 'BOSS!', tBossDown: 'BOSS BESIEGT!',
+    tSurvive: 'ÜBERLEBE!',
+    tEndboss: 'DER LETZTE AMINOGLU ERWACHT!', tSieg: 'BESIEGT!',
+    gewonnen: 'GESCHAFFT!', gewonnenWer: n => n + ' hat es überstanden',
+    restzeit: s => 'Endgegner in ' + s, tBomb: n => 'BOMBE! ' + n + ' ausgelöscht', tHeart: n => '+' + n + ' LEBEN', tBoss: 'BOSS!', tBossDown: 'BOSS BESIEGT!',
     noWebgl: 'Dein Browser unterstützt kein WebGL-Instancing. Bitte öffne das Spiel in Chrome, Safari oder Firefox (aktuelle Version).',
     lostCtx: 'Grafik konnte nicht wiederhergestellt werden – bitte die Seite neu laden.',
   },
@@ -358,7 +362,10 @@ const STR = {
     newRecord: '🏆 YENİ REKOR!',
     bestRun: (s, c, t, k) => `En iyi tur: <b>${s}</b> puan, ${c} ile · ${t} · ${k} öldürme`,
     again: 'TEKRAR', character: 'Karakter',
-    tSurvive: 'HAYATTA KAL!', tBomb: n => 'BOMBA! ' + n + ' yok edildi', tHeart: n => '+' + n + ' CAN', tBoss: 'BOSS!', tBossDown: 'BOSS YENİLDİ!',
+    tSurvive: 'HAYATTA KAL!',
+    tEndboss: 'SON AMINOGLU UYANIYOR!', tSieg: 'YENİLDİ!',
+    gewonnen: 'BAŞARDIN!', gewonnenWer: n => n + ' sağ çıktı',
+    restzeit: s => 'Son düşman: ' + s, tBomb: n => 'BOMBA! ' + n + ' yok edildi', tHeart: n => '+' + n + ' CAN', tBoss: 'BOSS!', tBossDown: 'BOSS YENİLDİ!',
     noWebgl: 'Tarayıcın WebGL instancing desteklemiyor. Lütfen oyunu güncel bir Chrome, Safari veya Firefox ile aç.',
     lostCtx: 'Grafik geri yüklenemedi – lütfen sayfayı yenile.',
   }
@@ -957,6 +964,7 @@ const ETYPES = {
   spitter: { hp: 26, spd: 1.95, dmg: 8, xp: 6, r: .55, sc: 1.02, col: [.24, .52, .45], from: 130, w: 20, ranged: true },
   bomber: { hp: 34, spd: 3.05, dmg: 10, xp: 6, r: .58, sc: 1.06, col: [.62, .30, .16], from: 175, w: 20, explode: true },
   boss: { hp: 430, spd: 2.05, dmg: 34, xp: 80, r: 1.7, sc: 3.0, col: [.46, .13, .16], from: 9999, w: 0, boss: true },
+  endboss: { hp: 2600, spd: 2.25, dmg: 48, xp: 400, r: 2.3, sc: 4.2, col: [.30, .06, .30], from: 9999, w: 0, boss: true, ende: true },
 };
 const BOSS_NAMES = [
   { de: 'Der Große Amınoğlu', tr: 'Büyük Amınoğlu' },
@@ -968,13 +976,16 @@ const BOSS_NAMES = [
 
 /* ---------------------------------- Spiel -------------------------------- */
 const ARENA = 47;
+// Nach dieser Zeit erscheint der Endgegner. Wer ihn niederringt, hat gewonnen —
+// vorher war der Lauf endlos und flachte darum irgendwann ab.
+const SIEGZEIT = 900;   // 15 Minuten
 const G = {
   state: 'title',      // title | select | play | levelup | pause | over
   t: 0, kills: 0, wave: 1,
   char: CHARS[0], wp: weaponById(CHARS[0].wp),   // nie leer: Stammwaffe ist vorgewählt
   p: null,
   enemies: [], bullets: [], ebullets: [], orbs: [], parts: [], decals: [], props: [], pops: [],
-  pickups: [], nextBomb: 0, nextHeart: 0,
+  pickups: [], nextBomb: 0, nextHeart: 0, endbossDa: false, gewonnen: false,
   spawnAcc: 0, nextBoss: 100, boss: null, bossCount: 0, lvlQueue: 0,
   shake: 0, camX: 0, camZ: 0, flash: 0,
 };
@@ -1100,19 +1111,28 @@ function spawnEnemy(type, forceR) {
   let x = p.x + Math.cos(ang) * dist, z = p.z + Math.sin(ang) * dist;
   const dd = Math.hypot(x, z);
   if (dd > ARENA - 2) { const k = (ARENA - 2) / dd; x *= k; z *= k; }
-  const hpS = Math.pow(d, 1.28);
+  // Der Zuwachs zieht im späteren Verlauf an, sonst hängt er hinter der
+  // vervielfachten Spielerstärke zurück.
+  const hpS = Math.pow(d, 1.28 + Math.min(0.30, G.t / 2600));
+  // Ab fünf Minuten wird ein wachsender Teil der Horde zu Elitegegnern:
+  // deutlich zäher und gefährlicher, ohne dass mehr Figuren nötig sind.
+  const eliteQuote = T.boss ? 0 : Math.min(0.35, Math.max(0, (G.t - 300) / 1800));
+  const elite = Math.random() < eliteQuote;
+  const eliteHp = elite ? 2.6 : 1, eliteDmg = elite ? 1.45 : 1;
   const e = {
-    t: type, T, x, z, y: 0,
-    hp: T.hp * hpS, maxHp: T.hp * hpS,
+    t: type, T, x, z, y: 0, elite,
+    hp: T.hp * hpS * eliteHp, maxHp: T.hp * hpS * eliteHp,
     spd: T.spd * (1 + Math.min(0.42, G.t / 520)) * rnd(.9, 1.1),
-    dmg: T.dmg * Math.pow(d, .55),
+    dmg: T.dmg * Math.pow(d, .55) * eliteDmg,
     r: T.r,
-    sc: T.sc, face: 0, walk: Math.random() * 10, atk: 0, flash: 0,
+    sc: T.sc * (elite ? 1.22 : 1), face: 0, walk: Math.random() * 10, atk: 0, flash: 0,
     kb: 0, kbx: 0, kbz: 0, shootCd: rnd(1.4, 3.2), dead: false, wob: Math.random() * TAU,
   };
   if (T.boss) {
-    e.nameKey = BOSS_NAMES[Math.min(BOSS_NAMES.length - 1, (G.wave / 4) | 0)];
-    e.hp = e.maxHp = T.hp * Math.pow(d, 1.22) * (1 + G.bossCount * 0.7);
+    e.nameKey = T.ende ? { de: 'DER LETZTE AMINOĞLU', tr: 'SON AMINOĞLU' }
+                       : BOSS_NAMES[Math.min(BOSS_NAMES.length - 1, (G.wave / 4) | 0)];
+    e.hp = e.maxHp = T.ende ? T.hp * Math.pow(d, 1.15)
+                            : T.hp * Math.pow(d, 1.22) * (1 + G.bossCount * 0.7);
     G.boss = e;
     sfx('boss'); buzz([40, 60, 90]);
     toast(t('tBoss'), '#ff6a6a');
@@ -1285,9 +1305,10 @@ function killEnemy(e) {
   const n = e.T.boss ? 14 : (e.T.xp > 3 ? 3 : 1);
   for (let i = 0; i < n; i++)
     G.orbs.push({ x: e.x + rnd(-.6, .6) * e.sc, z: e.z + rnd(-.6, .6) * e.sc, y: .35, v: 0, xp: e.T.xp / n * (e.T.boss ? 1 : 1), ph: Math.random() * TAU, got: false });
+  if (e.T.ende) { G.gewonnen = true; }
   if (e.T.boss) {
     G.boss = null; G.bossCount++;
-    toast(t('tBossDown'), '#ffd76a');
+    toast(e.T.ende ? t('tSieg') : t('tBossDown'), '#ffd76a');
     for (let i = 0; i < 3; i++) G.orbs.push({ x: e.x + rnd(-1.5, 1.5), z: e.z + rnd(-1.5, 1.5), y: .35, v: 0, heal: 40, ph: Math.random() * TAU, got: false });
     G.shake = 1.6; buzz([30, 50, 30, 50]);
   } else if (Math.random() < 0.022) {
@@ -1469,12 +1490,26 @@ function update(dt) {
   /* --- Spawning --- */
   const rate = 0.72 + G.t * 0.030 + Math.pow(G.t / 60, 1.9) * 0.35;
   G.spawnAcc += dt * rate;
-  const cap = Math.min(112, 34 + G.t * 0.18);
+  // Obergrenze wächst länger weiter; vorher stand sie ab acht Minuten still,
+  // während die Aufstiege des Spielers weiterwuchsen.
+  const cap = Math.min(170, 34 + G.t * 0.24);
   while (G.spawnAcc >= 1) {
     G.spawnAcc -= 1;
-    if (G.enemies.length < cap) spawnEnemy(pickType());
+    if (!G.endbossDa && G.enemies.length < cap) spawnEnemy(pickType());
   }
-  if (G.t >= G.nextBoss) { G.nextBoss += 105; spawnEnemy('boss', 24); }
+  if (G.t >= SIEGZEIT && !G.endbossDa) {
+    G.endbossDa = true;
+    // Sein Auftritt fegt die Horde weg — sichtbar, nicht durch stilles
+    // Verschwinden. Die Gefallenen zählen und lassen ihre Kristalle fallen.
+    for (const e of G.enemies.slice()) if (!e.dead) killEnemy(e);
+    spawnParts(G.p.x, 1.2, G.p.z, 46, [.75, .3, 1], 20, 1.0, .34, 10);
+    G.shake = 1.6; G.flash = 1;
+    sfx('boss'); buzz([70, 50, 70, 50, 140]);
+    spawnEnemy('endboss', 20);
+    toast(t('tEndboss'), '#e07aff');
+  }
+  // Nachschub und Zwischenbosse ruhen, sobald der Endgegner steht
+  if (!G.endbossDa && G.t >= G.nextBoss) { G.nextBoss += 105; spawnEnemy('boss', 24); }
   // Fundstücke tauchen in unregelmäßigen Abständen auf
   if (G.t >= G.nextBomb) { G.nextBomb = G.t + BOMB_INTERVALL; spawnPickup('bomb'); }
   if (G.t >= G.nextHeart) { G.nextHeart = G.t + rnd(24, 40); spawnPickup('heart'); }
@@ -1666,6 +1701,7 @@ function update(dt) {
     el.style.transform = `scale(${1 + Math.max(0, toastT - 1.2) * .5})`;
   }
 
+  if (G.gewonnen) { gameOver(true); return; }
   if (p.hp <= 0) gameOver();
 }
 
@@ -1828,8 +1864,10 @@ function drawZombie(e) {
   const T = e.T, f = e.flash;
   const s = e.sc;
   const col = T.col;
-  _zs[0] = col[0] * 1.15; _zs[1] = col[1] * 1.15; _zs[2] = col[2] * 1.05;
-  _zr[0] = col[0] * .55; _zr[1] = col[1] * .55; _zr[2] = col[2] * .62;
+  // Elite: kräftiger eingefärbt und mit Schimmer, damit man sie sofort erkennt
+  const ev = e.elite ? 1.5 : 1;
+  _zs[0] = col[0] * 1.15 * ev; _zs[1] = col[1] * 1.15; _zs[2] = col[2] * 1.05 * ev;
+  _zr[0] = col[0] * .55 * ev; _zr[1] = col[1] * .55; _zr[2] = col[2] * .62 * ev;
   _zp[0] = col[0] * .35 + .04; _zp[1] = col[1] * .33 + .04; _zp[2] = col[2] * .40 + .05;
   const o = _zo;
   o.x = e.x; o.z = e.z; o.face = e.face; o.walk = e.walk; o.sc = s; o.flash = f;
@@ -1840,6 +1878,9 @@ function drawZombie(e) {
     limb(e.x, e.z, g.base, e.face, -0.26 * s, g.hy + 0.24 * s, 0, -0.5, -0.4, 0.13 * s, 0.5 * s, 0.13 * s, bone, true);
     limb(e.x, e.z, g.base, e.face, 0.26 * s, g.hy + 0.24 * s, 0, -0.5, 0.4, 0.13 * s, 0.5 * s, 0.13 * s, bone, true);
     limb(e.x, e.z, g.base, e.face, 0, 1.42 * s, 0, 0, 0, 1.02 * s, 0.22 * s, 0.5 * s, tintInto(_ac, BPLATE, f), false);
+  }
+  if (e.elite) {
+    push(batches.gSph, e.x, 1.0 * s, e.z, 1.5 * s, 1.9 * s, 1.5 * s, 0, 0, 0, .85, .3, 1, .13);
   }
   if (T.explode) {
     push(batches.gSph, e.x, 1.05 * s, e.z, .55 * s, .55 * s, .55 * s, 0, 0, 0,
@@ -2055,7 +2096,10 @@ function updateHud(dt) {
   }
   if (hudAcc > 0.12) {
     hudAcc = 0;
-    setTx('hTime', fmtTime(G.t));
+    // Nach der Hälfte zählt die Anzeige zum Endgegner herunter — vorher war
+    // nicht erkennbar, dass der Lauf überhaupt ein Ziel hat.
+    const rest = SIEGZEIT - G.t;
+    setTx('hTime', (!G.endbossDa && rest <= SIEGZEIT / 2 && rest > 0) ? '⏳ ' + fmtTime(rest) : fmtTime(G.t));
     setTx('hKills', String(G.kills));
     setTx('hLvl', String(p.lvl));
     setTx('hWave', String(G.wave));
@@ -2196,6 +2240,8 @@ function renderScoresFrom(el, runs, markTs) {
 }
 function saveHS(h) { try { localStorage.setItem(HSKEY, JSON.stringify(h)); } catch (e) { } }
 function scoreOf(t, k) { return Math.round(t * 5 + k * 10); }
+// Wer den Endgegner niederringt, bekommt einen deutlichen Aufschlag
+const SIEG_BONUS = 5000;
 
 function show(id) {
   ['titleScreen', 'selScreen', 'lvlScreen', 'pauseScreen', 'overScreen', 'scoreScreen'].forEach(s => $(s).classList.toggle('hidden', s !== id));
@@ -2255,6 +2301,7 @@ function startGame() {
   G.enemies.length = 0; G.bullets.length = 0; G.ebullets.length = 0; G.orbs.length = 0;
   G.parts.length = 0; G.decals.length = 0; G.pops.length = 0;
   G.pickups.length = 0; G.nextBomb = BOMB_INTERVALL; G.nextHeart = rnd(20, 34);
+  G.endbossDa = false; G.gewonnen = false;
   G.shake = 0; G.flash = 0; G.camX = 0; G.camZ = 0;
   for (const k in _hud) delete _hud[k];
   buildProps();
@@ -2265,11 +2312,12 @@ function startGame() {
   toast(t('tSurvive'), '#7dd94f');
   resize();
 }
-function gameOver() {
+function gameOver(sieg) {
   G.state = 'over';
-  sfx('dead'); buzz([60, 40, 120]);
+  if (sieg) { sfx('level'); buzz([40, 60, 40, 60, 120]); }
+  else { sfx('dead'); buzz([60, 40, 120]); }
   const p = G.p;
-  const sc = scoreOf(G.t, G.kills);
+  const sc = scoreOf(G.t, G.kills) + (sieg ? SIEG_BONUS : 0);
   const hs = loadHS();
   const prev = hs[p.ch.id];
   const rec = !prev || sc > prev.score;
@@ -2280,7 +2328,10 @@ function gameOver() {
   // localStorage schreibt synchron und blockiert auf manchen Geräten spürbar.
   // Nicht in dem Bild, in dem gerade der Sterbe-Klang startet — sonst reißt er.
   setTimeout(() => saveHS(hs), 0);
-  $('overWho').textContent = t('fell')(p.ch.name);
+  const h1 = $('overScreen').querySelector('h1');
+  h1.textContent = sieg ? t('gewonnen') : t('gameOver');
+  h1.classList.toggle('sieg', !!sieg);
+  $('overWho').textContent = sieg ? t('gewonnenWer')(p.ch.name) : t('fell')(p.ch.name);
   $('oTime').textContent = fmtTime(G.t);
   $('oKills').textContent = G.kills;
   $('oLvl').textContent = p.lvl;
