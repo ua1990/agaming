@@ -46,6 +46,12 @@ Horde immer stärker wird.
   mit dem gerade gespielten Lauf hervorgehoben. Jeder Eintrag nennt Charakter,
   Waffe, Zeit, Kills und Level. Zusätzlich merkt sich das Spiel je Charakter den
   besten Lauf; alles lokal in `localStorage`.
+* **Online-Bestenliste (optional):** Wer Läufe mit Freunden vergleichen will,
+  stellt den kleinen Dienst unter [`server/`](server/) dazu — ein Cloudflare
+  Worker in einer Datei. Im Spiel oben unter `ONLINE` Adresse und **Raumcode**
+  eintragen; nur wer denselben Code hat, sieht dieselbe Liste. Ohne Eintrag
+  bleibt alles rein lokal und es gibt keinerlei Netzaufrufe. Einzelheiten und
+  Grenzen stehen in [`server/README.md`](server/README.md).
 * **Rollen:** Die Charakternamen bleiben in beiden Sprachen gleich, Rollen und
   Waffen sind übersetzt (z. B. Ahmet – „Der Panzer" / „Tank", Schrotflinte /
   Pompalı Tüfek).

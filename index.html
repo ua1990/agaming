@@ -149,6 +149,12 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
   font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hsrow .pts{flex:0 0 auto;font-size:16px;font-weight:900;font-variant-numeric:tabular-nums}
 .hsempty{color:#5f6b7d;font-size:12.5px;text-align:center;padding:16px 8px;line-height:1.6}
+.tabs{display:flex;gap:0;margin-top:14px;border:1px solid #2a3346;border-radius:12px;overflow:hidden;background:#121722}
+.tab{appearance:none;border:0;background:transparent;color:#8b97ab;font-size:13.5px;font-weight:800;
+  padding:9px 18px;cursor:pointer;font-family:inherit;transition:.12s}
+.tab.on{background:linear-gradient(180deg,#33415c,#242f44);color:#eaf1fb}
+.hsrow .wo{flex:0 0 auto;font-size:9.5px;color:#6f7d92;font-weight:800;letter-spacing:.4px;
+  align-self:flex-start;margin-top:2px}
 .foot{margin-top:16px;font-size:11px;color:#5f6b7d;text-align:center;line-height:1.6}
 .langRow{display:flex;gap:0;margin-top:18px;border:1px solid #2a3346;border-radius:12px;overflow:hidden;background:#121722}
 .langBtn{appearance:none;border:0;background:transparent;color:#8b97ab;font-size:14px;font-weight:800;
@@ -231,8 +237,13 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
   <!-- Bestenliste -->
   <div id="scoreScreen" class="screen hidden">
     <h1 style="font-size:30px" data-i18n="scoresTitle">Bestenliste</h1>
-    <div class="sub" data-i18n="scoresSub">Die fünf besten Läufe</div>
+    <div class="sub" id="scoreSub" data-i18n="scoresSub">Die fünf besten Läufe</div>
+    <div class="tabs hidden" id="scoreTabs">
+      <button class="tab on" data-tab="lokal" data-i18n="tabLokal">Dieses Gerät</button>
+      <button class="tab" data-tab="online" data-i18n="tabOnline">Freunde</button>
+    </div>
     <div class="hstable" id="scoreList"></div>
+    <button class="btn alt small hidden" id="btnName" style="margin-top:14px">Name ändern</button>
     <button class="btn alt" id="btnScoresBack" data-i18n="back" style="margin-top:20px">Zurück</button>
   </div>
 
@@ -248,6 +259,7 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
     </div>
     <div class="newrec hidden" id="oRec" data-i18n="newRecord">🏆 NEUER HIGHSCORE!</div>
     <div class="hstable" id="oScores"></div>
+    <div class="foot hidden" id="oOnline" style="margin-top:10px"></div>
     <div class="btnRow">
       <button class="btn" id="btnAgain" data-i18n="again">NOCHMAL</button>
       <button class="btn alt" id="btnMenu" data-i18n="character">Charakter</button>
@@ -291,6 +303,16 @@ const STR = {
     heldWith: (c, w) => c + ' mit ' + w,
     chooseFighter: 'Wähle deinen Kämpfer',
     scoresBtn: '🏆 Bestenliste', scoresTitle: 'Bestenliste', scoresSub: 'Die fünf besten Läufe',
+    tabLokal: 'Dieses Gerät', tabOnline: 'Freunde',
+    scoresSubOnline: r => 'Raum: ' + r,
+    laedt: 'Wird geladen …',
+    netzFehler: f => 'Liste nicht erreichbar.<br>' + f,
+    changeName: n => 'Name: ' + n,
+    namePrompt: 'Wie sollst du in der Freundesliste heißen? (max. 16 Zeichen)',
+    sende: 'Wird eingetragen …',
+    sendeOk: 'Eingetragen, aber nicht unter den besten 20.',
+    sendePlatz: p => 'Eingetragen — Platz ' + p + ' bei den Freunden!',
+    sendeFehler: f => 'Nicht eingetragen: ' + f,
     noRuns: 'Noch keine Läufe eingetragen.<br>Spiel eine Runde!',
     runLine: (t, k, l) => `${t} · ${k} Kills · Level ${l}`, chooseWeapon: 'Und jetzt die Waffe',
     stRange: 'Weite', scopeTag: '🎯 ZIELFERNROHR · 54°', signature: n => 'Tritt sonst an mit: ' + n, signatureTag: '★ STAMMWAFFE', back: 'Zurück', go: "LOS GEHT'S",
@@ -317,6 +339,16 @@ const STR = {
     heldWith: (c, w) => c + ', ' + w + ' ile',
     chooseFighter: 'Savaşçını Seç',
     scoresBtn: '🏆 En İyiler', scoresTitle: 'En İyiler', scoresSub: 'En iyi beş tur',
+    tabLokal: 'Bu cihaz', tabOnline: 'Arkadaşlar',
+    scoresSubOnline: r => 'Oda: ' + r,
+    laedt: 'Yükleniyor …',
+    netzFehler: f => 'Listeye ulaşılamadı.<br>' + f,
+    changeName: n => 'İsim: ' + n,
+    namePrompt: 'Arkadaş listesinde adın ne olsun? (en fazla 16 karakter)',
+    sende: 'Kaydediliyor …',
+    sendeOk: 'Kaydedildi, ancak ilk 20 dışında.',
+    sendePlatz: p => 'Kaydedildi — arkadaşlar arasında ' + p + '. sıra!',
+    sendeFehler: f => 'Kaydedilemedi: ' + f,
     noRuns: 'Henüz kayıtlı tur yok.<br>Bir tur oyna!',
     runLine: (t, k, l) => `${t} · ${k} öldürme · Seviye ${l}`, chooseWeapon: 'Şimdi de silah',
     stRange: 'Menzil', scopeTag: '🎯 DÜRBÜN · 54°', signature: n => 'Normalde şununla çıkar: ' + n, signatureTag: '★ ASIL SİLAHI', back: 'Geri', go: 'HADİ BAŞLAYALIM',
@@ -897,6 +929,8 @@ const WEAPONS = [
     gun: { type: 'pist', dmg: 16, rate: .30, count: 1, spread: .06, speed: 36, range: 18, size: .19, pierce: 0 } },
 ];
 const weaponById = id => WEAPONS.find(w => w.id === id) || WEAPONS[0];
+// Vom Server kann eine unbekannte Kennung kommen; dann den Rohwert zeigen
+const waffenName = id => { const w = WEAPONS.find(x => x.id === id); return w ? tx(w.nm) : id; };
 // Grobe Dauerleistung für die Balken in der Auswahl
 const weaponDps = w => w.gun.dmg * w.gun.count / w.gun.rate + (w.gun.splashDmg || 0) / w.gun.rate;
 
@@ -2085,6 +2119,62 @@ function frame(now) {
 /* -------------------------------- Screens -------------------------------- */
 const HSKEY = 'aminoglu_zombie_hs_v1';
 const TOPN = 5;
+
+/* ---------------------- Online-Bestenliste (optional) --------------------
+   Leer lassen = alles bleibt rein lokal, im Menü taucht nichts davon auf.
+   Zum Einschalten die Adresse des eigenen Servers und einen Raumcode
+   eintragen; nur wer denselben Code hat, sieht dieselbe Liste.
+   Eine fertige Server-Fassung liegt unter server/ im Projekt.            */
+const ONLINE = {
+  url: '',      // z. B. 'https://aminoglu-scores.dein-name.workers.dev'
+  raum: '',     // z. B. 'baran-clan'
+};
+const online = () => !!(ONLINE.url && ONLINE.raum);
+const NAMEKEY = 'aminoglu_name_v1';
+function spielerName() { try { return localStorage.getItem(NAMEKEY) || ''; } catch (e) { return ''; } }
+function setzeName(n) { try { localStorage.setItem(NAMEKEY, n.slice(0, 16)); } catch (e) { } }
+
+// Vom Server kommender Text wird als HTML eingesetzt, deshalb hier entschärfen
+function escHtml(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+/* Holt die Online-Liste. Fehler werden nicht geworfen, sondern gemeldet —
+   ohne Netz soll das Spiel unverändert weiterlaufen. */
+/* Baut die Adresse über die URL-Schnittstelle statt per Zeichenkette: nur so
+   bleiben Pfade, vorhandene Parameter und Schrägstriche am Ende heil. */
+function zielUrl() {
+  const u = new URL(ONLINE.url);
+  u.searchParams.set('raum', ONLINE.raum);
+  return u.toString();
+}
+async function holeOnline() {
+  const ziel = zielUrl();
+  const ctrl = new AbortController();
+  const stopp = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const r = await fetch(ziel, { signal: ctrl.signal });
+    const d = await r.json();
+    if (!r.ok) return { fehler: d && d.fehler || ('HTTP ' + r.status) };
+    return { eintraege: Array.isArray(d.eintraege) ? d.eintraege : [] };
+  } catch (e) {
+    return { fehler: e.name === 'AbortError' ? 'Zeitüberschreitung' : 'Server nicht erreichbar' };
+  } finally { clearTimeout(stopp); }
+}
+async function sendeOnline(lauf) {
+  const ziel = zielUrl();
+  const ctrl = new AbortController();
+  const stopp = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const r = await fetch(ziel, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(lauf), signal: ctrl.signal });
+    const d = await r.json();
+    if (!r.ok) return { fehler: d && d.fehler || ('HTTP ' + r.status) };
+    return d;
+  } catch (e) {
+    return { fehler: e.name === 'AbortError' ? 'Zeitüberschreitung' : 'Server nicht erreichbar' };
+  } finally { clearTimeout(stopp); }
+}
 function loadHS() {
   let h;
   try { h = JSON.parse(localStorage.getItem(HSKEY)) || {}; } catch (e) { h = {}; }
@@ -2105,10 +2195,11 @@ function renderScores(elId, markTs) {
 function renderScoresFrom(el, runs, markTs) {
   if (!runs || !runs.length) { el.innerHTML = `<div class="hsempty">${t('noRuns')}</div>`; return; }
   el.innerHTML = runs.map((r, i) => {
-    const waffe = r.wp ? ' · ' + tx(weaponById(r.wp).nm) : '';
+    const waffe = r.wp ? ' · ' + escHtml(waffenName(r.wp)) : '';
     const mark = (markTs && r.ts === markTs) ? ' me' : '';
+    const wer = escHtml(r.name ? r.name : r.char) + (r.name ? ' · ' + escHtml(r.char) : '');
     return `<div class="hsrow${mark}"><div class="rk">${i + 1}</div>` +
-      `<div class="who"><b>${r.char}${waffe}</b>` +
+      `<div class="who"><b>${wer}${waffe}</b>` +
       `<s>${t('runLine')(fmtTime(r.time), r.kills, r.lvl || 1)}</s></div>` +
       `<div class="pts">${r.score}</div></div>`;
   }).join('');
@@ -2207,9 +2298,20 @@ function gameOver() {
   $('oRec').classList.toggle('hidden', !rec);
   // Tabelle liest aus dem Speicher, der erst verzögert geschrieben wird —
   // deshalb hier direkt aus dem schon aktualisierten Objekt zeichnen.
-  const merk = hs.runs; 
-  renderScoresFrom($('oScores'), merk, lauf.ts);
+  renderScoresFrom($('oScores'), hs.runs, lauf.ts);
+  $('oOnline').textContent = '';
+  $('oOnline').classList.toggle('hidden', !online());
   show('overScreen');
+  // Lauf in die Freundesliste eintragen — schlägt das fehl, bleibt es bei
+  // einer Zeile Hinweis, der lokale Eintrag steht ohnehin schon.
+  if (online()) {
+    $('oOnline').textContent = t('sende');
+    sendeOnline({ name: spielerName(), time: G.t, kills: G.kills, lvl: p.lvl,
+                  char: p.ch.name, wp: p.wp.id }).then(r => {
+      if (r.fehler) $('oOnline').textContent = t('sendeFehler')(r.fehler);
+      else $('oOnline').textContent = r.platz > 0 ? t('sendePlatz')(r.platz) : t('sendeOk');
+    });
+  }
 }
 function togglePause() {
   if (G.state === 'play') { G.state = 'pause'; show('pauseScreen'); }
@@ -2220,7 +2322,31 @@ $('btnResume').onclick = () => togglePause();
 $('btnQuit').onclick = () => { gameOver(); };
 $('btnStart').onclick = () => { initAudio(); resumeAudio(); buildCards(); G.state = 'select'; show('selScreen'); };
 $('btnBack').onclick = () => { G.state = 'title'; show('titleScreen'); refreshBest(); };
-$('btnScores').onclick = () => { renderScores('scoreList'); G.state = 'scores'; show('scoreScreen'); };
+let scoreTab = 'lokal';
+function zeigeScores() {
+  $('scoreTabs').classList.toggle('hidden', !online());
+  $('btnName').classList.toggle('hidden', !online());
+  $('btnName').textContent = t('changeName')(spielerName() || '—');
+  document.querySelectorAll('#scoreTabs .tab').forEach(b => b.classList.toggle('on', b.dataset.tab === scoreTab));
+  $('scoreSub').textContent = scoreTab === 'online' ? t('scoresSubOnline')(ONLINE.raum) : t('scoresSub');
+  if (scoreTab === 'lokal' || !online()) { renderScores('scoreList'); return; }
+  $('scoreList').innerHTML = `<div class="hsempty">${t('laedt')}</div>`;
+  holeOnline().then(r => {
+    if (scoreTab !== 'online') return;                      // inzwischen umgeschaltet
+    if (r.fehler) { $('scoreList').innerHTML = `<div class="hsempty">${t('netzFehler')(escHtml(r.fehler))}</div>`; return; }
+    renderScoresFrom($('scoreList'), r.eintraege, 0);
+  });
+}
+document.querySelectorAll('#scoreTabs .tab').forEach(b => {
+  b.onclick = () => { scoreTab = b.dataset.tab; zeigeScores(); buzz(8); };
+});
+$('btnName').onclick = () => {
+  const n = prompt(t('namePrompt'), spielerName());
+  if (n === null) return;
+  setzeName(n.trim());
+  zeigeScores();
+};
+$('btnScores').onclick = () => { G.state = 'scores'; show('scoreScreen'); zeigeScores(); };
 $('btnScoresBack').onclick = () => { G.state = 'title'; show('titleScreen'); refreshBest(); };
 $('btnGo').onclick = () => startGame();
 $('btnAgain').onclick = () => startGame();
@@ -2249,7 +2375,7 @@ function applyLang() {
   refreshSound();
   refreshBest();
   if (!$('selScreen').classList.contains('hidden')) buildCards();
-  if (!$('scoreScreen').classList.contains('hidden')) renderScores('scoreList');
+  if (!$('scoreScreen').classList.contains('hidden')) zeigeScores();
   if (!ENGINE_OK) $('loadErr').textContent = t('noWebgl');
 }
 document.querySelectorAll('.langBtn').forEach(b => {
