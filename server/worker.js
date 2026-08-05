@@ -26,7 +26,8 @@ const KOPF = {
 const antwort = (daten, status = 200) =>
   new Response(JSON.stringify(daten), { status, headers: { ...KOPF, 'Content-Type': 'application/json' } });
 
-// Steuerzeichen und spitze Klammern raus, damit nichts als Auszeichnung wirkt
+// Steuerzeichen und spitze Klammern raus: Charakter- und Waffennamen kommen
+// zwar aus dem Spiel, der Server soll sich darauf aber nicht verlassen
 const STEUERZEICHEN = new RegExp('[\\u0000-\\u001f\\u007f<>]', 'g');
 const text = (v, max) =>
   typeof v === 'string' ? v.replace(STEUERZEICHEN, '').trim().slice(0, max) : '';
@@ -46,7 +47,6 @@ function pruefe(b) {
   // Mehr als 40 Kills je Sekunde schafft niemand — solche Läufe fliegen raus
   if (kills > 40 * zeit + 200) return null;
   return {
-    name: text(b && b.name, 16) || 'Anonym',
     char: text(b && b.char, 16) || '?',
     wp: text(b && b.wp, 12) || '?',
     time: Math.round(zeit * 100) / 100,

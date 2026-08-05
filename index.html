@@ -243,7 +243,6 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
       <button class="tab" data-tab="online" data-i18n="tabOnline">Freunde</button>
     </div>
     <div class="hstable" id="scoreList"></div>
-    <button class="btn alt small hidden" id="btnName" style="margin-top:14px">Name ändern</button>
     <button class="btn alt" id="btnScoresBack" data-i18n="back" style="margin-top:20px">Zurück</button>
   </div>
 
@@ -307,8 +306,6 @@ const STR = {
     scoresSubOnline: r => 'Raum: ' + r,
     laedt: 'Wird geladen …',
     netzFehler: f => 'Liste nicht erreichbar.<br>' + f,
-    changeName: n => 'Name: ' + n,
-    namePrompt: 'Wie sollst du in der Freundesliste heißen? (max. 16 Zeichen)',
     sende: 'Wird eingetragen …',
     sendeOk: 'Eingetragen, aber nicht unter den besten 20.',
     sendePlatz: p => 'Eingetragen — Platz ' + p + ' bei den Freunden!',
@@ -343,8 +340,6 @@ const STR = {
     scoresSubOnline: r => 'Oda: ' + r,
     laedt: 'Yükleniyor …',
     netzFehler: f => 'Listeye ulaşılamadı.<br>' + f,
-    changeName: n => 'İsim: ' + n,
-    namePrompt: 'Arkadaş listesinde adın ne olsun? (en fazla 16 karakter)',
     sende: 'Kaydediliyor …',
     sendeOk: 'Kaydedildi, ancak ilk 20 dışında.',
     sendePlatz: p => 'Kaydedildi — arkadaşlar arasında ' + p + '. sıra!',
@@ -2130,10 +2125,6 @@ const ONLINE = {
   raum: '',     // z. B. 'baran-clan'
 };
 const online = () => !!(ONLINE.url && ONLINE.raum);
-const NAMEKEY = 'aminoglu_name_v1';
-function spielerName() { try { return localStorage.getItem(NAMEKEY) || ''; } catch (e) { return ''; } }
-function setzeName(n) { try { localStorage.setItem(NAMEKEY, n.slice(0, 16)); } catch (e) { } }
-
 // Vom Server kommender Text wird als HTML eingesetzt, deshalb hier entschärfen
 function escHtml(v) {
   return String(v == null ? '' : v).replace(/[&<>"']/g, c =>
@@ -2197,9 +2188,8 @@ function renderScoresFrom(el, runs, markTs) {
   el.innerHTML = runs.map((r, i) => {
     const waffe = r.wp ? ' · ' + escHtml(waffenName(r.wp)) : '';
     const mark = (markTs && r.ts === markTs) ? ' me' : '';
-    const wer = escHtml(r.name ? r.name : r.char) + (r.name ? ' · ' + escHtml(r.char) : '');
     return `<div class="hsrow${mark}"><div class="rk">${i + 1}</div>` +
-      `<div class="who"><b>${wer}${waffe}</b>` +
+      `<div class="who"><b>${escHtml(r.char)}${waffe}</b>` +
       `<s>${t('runLine')(fmtTime(r.time), r.kills, r.lvl || 1)}</s></div>` +
       `<div class="pts">${r.score}</div></div>`;
   }).join('');
@@ -2306,7 +2296,7 @@ function gameOver() {
   // einer Zeile Hinweis, der lokale Eintrag steht ohnehin schon.
   if (online()) {
     $('oOnline').textContent = t('sende');
-    sendeOnline({ name: spielerName(), time: G.t, kills: G.kills, lvl: p.lvl,
+    sendeOnline({ time: G.t, kills: G.kills, lvl: p.lvl,
                   char: p.ch.name, wp: p.wp.id }).then(r => {
       if (r.fehler) $('oOnline').textContent = t('sendeFehler')(r.fehler);
       else $('oOnline').textContent = r.platz > 0 ? t('sendePlatz')(r.platz) : t('sendeOk');
@@ -2325,8 +2315,6 @@ $('btnBack').onclick = () => { G.state = 'title'; show('titleScreen'); refreshBe
 let scoreTab = 'lokal';
 function zeigeScores() {
   $('scoreTabs').classList.toggle('hidden', !online());
-  $('btnName').classList.toggle('hidden', !online());
-  $('btnName').textContent = t('changeName')(spielerName() || '—');
   document.querySelectorAll('#scoreTabs .tab').forEach(b => b.classList.toggle('on', b.dataset.tab === scoreTab));
   $('scoreSub').textContent = scoreTab === 'online' ? t('scoresSubOnline')(ONLINE.raum) : t('scoresSub');
   if (scoreTab === 'lokal' || !online()) { renderScores('scoreList'); return; }
@@ -2340,12 +2328,6 @@ function zeigeScores() {
 document.querySelectorAll('#scoreTabs .tab').forEach(b => {
   b.onclick = () => { scoreTab = b.dataset.tab; zeigeScores(); buzz(8); };
 });
-$('btnName').onclick = () => {
-  const n = prompt(t('namePrompt'), spielerName());
-  if (n === null) return;
-  setzeName(n.trim());
-  zeigeScores();
-};
 $('btnScores').onclick = () => { G.state = 'scores'; show('scoreScreen'); zeigeScores(); };
 $('btnScoresBack').onclick = () => { G.state = 'title'; show('titleScreen'); refreshBest(); };
 $('btnGo').onclick = () => startGame();
