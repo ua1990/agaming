@@ -40,7 +40,9 @@ Horde immer stärker wird.
 Charakter und Waffe werden getrennt gewählt — **jeder Charakter kann jede Waffe
 führen**, macht also 36 Kombinationen. Der Charakter bestimmt Leben, Tempo,
 Aussehen und Eigenheiten; die Waffe bestimmt Schaden, Feuerrate und Reichweite.
-Wählt man einen Charakter, ist seine Stammwaffe vorausgewählt.
+Beim Anwählen eines Charakters springt die Auswahl auf seine Stammwaffe; sie ist
+auch beim Aufrufen des Spiels schon gesetzt, es lässt sich also nie ohne Waffe
+starten.
 
 | Charakter | Rolle | Eigenheit | Stammwaffe |
 |---|---|---|---|

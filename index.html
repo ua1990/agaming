@@ -908,7 +908,7 @@ const ARENA = 47;
 const G = {
   state: 'title',      // title | select | play | levelup | pause | over
   t: 0, kills: 0, wave: 1,
-  char: CHARS[0], wp: null,
+  char: CHARS[0], wp: weaponById(CHARS[0].wp),   // nie leer: Stammwaffe ist vorgewählt
   p: null,
   enemies: [], bullets: [], ebullets: [], orbs: [], parts: [], decals: [], props: [], pops: [],
   spawnAcc: 0, nextBoss: 100, boss: null, bossCount: 0, lvlQueue: 0,
@@ -1996,7 +1996,6 @@ function buildCards() {
     box.appendChild(d);
   });
 
-  if (!G.wp) G.wp = weaponById(G.char.wp);
   const wbox = $('wcards'); wbox.innerHTML = '';
   const maxDps = Math.max(...WEAPONS.map(weaponDps));
   WEAPONS.forEach(w => {
@@ -2018,8 +2017,6 @@ function buildCards() {
 function startGame() {
   initAudio();
   resumeAudio();
-  // Ohne vorherige Auswahl greift die Stammwaffe des Charakters
-  if (!G.wp) G.wp = weaponById(G.char.wp);
   G.p = mkPlayer(G.char, G.wp);
   G.t = 0; G.kills = 0; G.wave = 1; G.spawnAcc = 0; G.nextBoss = 100; G.bossCount = 0; G.boss = null; G.lvlQueue = 0;
   G.enemies.length = 0; G.bullets.length = 0; G.ebullets.length = 0; G.orbs.length = 0;
