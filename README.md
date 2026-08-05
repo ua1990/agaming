@@ -7,6 +7,13 @@ ohne externe Bibliotheken, Bilder oder Sounddateien.
 
 `index.html` im Browser öffnen. Fertig.
 
+## Sprache
+
+Im Startmenü lässt sich zwischen **Deutsch** und **Türkçe** umschalten. Übersetzt
+sind alle Menüs, das HUD, die Upgrades, Charakterrollen und Waffennamen sowie die
+Boss-Namen. Die Wahl wird lokal gespeichert; beim ersten Start entscheidet die
+Spracheinstellung des Browsers.
+
 ## Spielprinzip
 
 Top-Down-Survival: Du bewegst dich, **geschossen wird automatisch** auf den
@@ -21,6 +28,9 @@ immer stärker wird.
 * **Gegner:** Walker, Runner, Brute, Spitter und Bomber — Leben, Tempo und
   Schaden skalieren mit der Überlebenszeit. Alle ~105 Sekunden kommt ein Boss.
 * **Highscore:** `Überlebenszeit × 5 + Kills × 10`, pro Charakter lokal gespeichert.
+* **Rollen:** Die Charakternamen bleiben in beiden Sprachen gleich, Rollen und
+  Waffen sind übersetzt (z. B. Ahmet – „Der Panzer" / „Tank", Schrotflinte /
+  Pompalı Tüfek).
 
 ## Charaktere
 
