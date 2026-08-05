@@ -16,6 +16,10 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 #ui{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 #dmgFlash{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(255,0,0,0) 35%,rgba(190,0,0,.85) 100%);
   opacity:0;pointer-events:none;z-index:14;transition:opacity .09s}
+/* Kinder behalten ihre Höhe: ohne flex-shrink:0 quetscht die Spalte sie
+   zusammen, sobald der Inhalt höher als der Bildschirm ist (Querformat),
+   statt zu scrollen — Knöpfe werden dann flach und untreffbar. */
+.screen > *{flex-shrink:0}
 .screen{position:absolute;inset:0;pointer-events:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 14px);
   background:radial-gradient(ellipse at 50% 35%,#161c28 0%,#080a0e 70%);z-index:20;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -132,6 +136,19 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
 .sbox .lb{font-size:9.5px;color:#8b97ab;letter-spacing:1.4px;text-transform:uppercase;font-weight:800}
 .sbox .vl{font-size:23px;font-weight:900;margin-top:3px;font-variant-numeric:tabular-nums}
 .newrec{color:#ffd76a;font-weight:900;font-size:14px;margin-top:10px;letter-spacing:1px}
+.hstable{display:flex;flex-direction:column;gap:6px;width:100%;max-width:420px;margin-top:14px}
+.hsrow{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:9px 11px;text-align:left}
+.hsrow.me{border-color:#ffd76a;background:rgba(255,215,106,.11)}
+.hsrow .rk{width:20px;flex:0 0 auto;font-size:14px;font-weight:900;color:#7e8b9f;text-align:center;
+  font-variant-numeric:tabular-nums}
+.hsrow.me .rk{color:#ffd76a}
+.hsrow .who{flex:1;min-width:0}
+.hsrow .who b{display:block;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hsrow .who s{display:block;text-decoration:none;font-size:10.5px;color:#8b97ab;margin-top:1px;
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hsrow .pts{flex:0 0 auto;font-size:16px;font-weight:900;font-variant-numeric:tabular-nums}
+.hsempty{color:#5f6b7d;font-size:12.5px;text-align:center;padding:16px 8px;line-height:1.6}
 .foot{margin-top:16px;font-size:11px;color:#5f6b7d;text-align:center;line-height:1.6}
 .langRow{display:flex;gap:0;margin-top:18px;border:1px solid #2a3346;border-radius:12px;overflow:hidden;background:#121722}
 .langBtn{appearance:none;border:0;background:transparent;color:#8b97ab;font-size:14px;font-weight:800;
@@ -174,6 +191,7 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
         <button class="btn alt small" id="btnFs" data-i18n="fullscreen">Vollbild</button>
         <button class="btn alt small" id="btnSound">🔊 Ton</button>
       </div>
+      <button class="btn alt small" id="btnScores" data-i18n="scoresBtn">🏆 Bestenliste</button>
     </div>
     <div class="langRow">
       <button class="langBtn" data-lang="de">Deutsch</button>
@@ -210,6 +228,14 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
     </div>
   </div>
 
+  <!-- Bestenliste -->
+  <div id="scoreScreen" class="screen hidden">
+    <h1 style="font-size:30px" data-i18n="scoresTitle">Bestenliste</h1>
+    <div class="sub" data-i18n="scoresSub">Die fünf besten Läufe</div>
+    <div class="hstable" id="scoreList"></div>
+    <button class="btn alt" id="btnScoresBack" data-i18n="back" style="margin-top:20px">Zurück</button>
+  </div>
+
   <!-- Game Over -->
   <div id="overScreen" class="screen hidden">
     <h1 data-i18n="gameOver">GAME OVER</h1>
@@ -221,7 +247,7 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
       <div class="sbox"><div class="lb" data-i18n="points">Punkte</div><div class="vl" id="oScore">0</div></div>
     </div>
     <div class="newrec hidden" id="oRec" data-i18n="newRecord">🏆 NEUER HIGHSCORE!</div>
-    <div class="foot" id="oBest"></div>
+    <div class="hstable" id="oScores"></div>
     <div class="btnRow">
       <button class="btn" id="btnAgain" data-i18n="again">NOCHMAL</button>
       <button class="btn alt" id="btnMenu" data-i18n="character">Charakter</button>
@@ -263,7 +289,10 @@ const STR = {
     hint: 'Bewege dich mit dem linken Daumen ·<br>Geschossen wird automatisch in Laufrichtung.',
     record: (s, h, t, k) => `🏆 Rekord: <b>${s}</b> Punkte<br>${h} · ${t} · ${k} Kills`,
     heldWith: (c, w) => c + ' mit ' + w,
-    chooseFighter: 'Wähle deinen Kämpfer', chooseWeapon: 'Und jetzt die Waffe',
+    chooseFighter: 'Wähle deinen Kämpfer',
+    scoresBtn: '🏆 Bestenliste', scoresTitle: 'Bestenliste', scoresSub: 'Die fünf besten Läufe',
+    noRuns: 'Noch keine Läufe eingetragen.<br>Spiel eine Runde!',
+    runLine: (t, k, l) => `${t} · ${k} Kills · Level ${l}`, chooseWeapon: 'Und jetzt die Waffe',
     stRange: 'Weite', scopeTag: '🎯 ZIELFERNROHR · 54°', signature: n => 'Tritt sonst an mit: ' + n, signatureTag: '★ STAMMWAFFE', back: 'Zurück', go: "LOS GEHT'S",
     tip: 'Du schießt, wohin du läufst — halte die Horde vor dir.',
     stHp: 'HP', stSpd: 'Tempo', stDps: 'DPS',
@@ -286,7 +315,10 @@ const STR = {
     hint: 'Sol başparmağınla hareket et ·<br>Ateş otomatik, koştuğun yöne.',
     record: (s, h, t, k) => `🏆 Rekor: <b>${s}</b> puan<br>${h} · ${t} · ${k} öldürme`,
     heldWith: (c, w) => c + ', ' + w + ' ile',
-    chooseFighter: 'Savaşçını Seç', chooseWeapon: 'Şimdi de silah',
+    chooseFighter: 'Savaşçını Seç',
+    scoresBtn: '🏆 En İyiler', scoresTitle: 'En İyiler', scoresSub: 'En iyi beş tur',
+    noRuns: 'Henüz kayıtlı tur yok.<br>Bir tur oyna!',
+    runLine: (t, k, l) => `${t} · ${k} öldürme · Seviye ${l}`, chooseWeapon: 'Şimdi de silah',
     stRange: 'Menzil', scopeTag: '🎯 DÜRBÜN · 54°', signature: n => 'Normalde şununla çıkar: ' + n, signatureTag: '★ ASIL SİLAHI', back: 'Geri', go: 'HADİ BAŞLAYALIM',
     tip: 'Koştuğun yöne ateş edersin — sürüyü hep önünde tut.',
     stHp: 'CAN', stSpd: 'Hız', stDps: 'DPS',
@@ -1962,12 +1994,40 @@ function frame(now) {
 
 /* -------------------------------- Screens -------------------------------- */
 const HSKEY = 'aminoglu_zombie_hs_v1';
-function loadHS() { try { return JSON.parse(localStorage.getItem(HSKEY)) || {}; } catch (e) { return {}; } }
+const TOPN = 5;
+function loadHS() {
+  let h;
+  try { h = JSON.parse(localStorage.getItem(HSKEY)) || {}; } catch (e) { h = {}; }
+  // Ältere Stände kennen nur den einen Bestlauf — der wandert in die Liste,
+  // damit ein bereits erspielter Rekord nicht verlorengeht.
+  if (!Array.isArray(h.runs)) h.runs = h.best ? [Object.assign({ ts: 0 }, h.best)] : [];
+  return h;
+}
+// Läufe absteigend nach Punkten, bei Gleichstand der ältere zuerst
+function sortRuns(runs) {
+  return runs.slice().sort((a, b) => b.score - a.score || (a.ts || 0) - (b.ts || 0)).slice(0, TOPN);
+}
+/* Zeichnet die Tabelle in einen Container. markTs hebt den gerade
+   gespielten Lauf hervor, sofern er es in die Liste geschafft hat. */
+function renderScores(elId, markTs) {
+  renderScoresFrom($(elId), loadHS().runs, markTs);
+}
+function renderScoresFrom(el, runs, markTs) {
+  if (!runs || !runs.length) { el.innerHTML = `<div class="hsempty">${t('noRuns')}</div>`; return; }
+  el.innerHTML = runs.map((r, i) => {
+    const waffe = r.wp ? ' · ' + tx(weaponById(r.wp).nm) : '';
+    const mark = (markTs && r.ts === markTs) ? ' me' : '';
+    return `<div class="hsrow${mark}"><div class="rk">${i + 1}</div>` +
+      `<div class="who"><b>${r.char}${waffe}</b>` +
+      `<s>${t('runLine')(fmtTime(r.time), r.kills, r.lvl || 1)}</s></div>` +
+      `<div class="pts">${r.score}</div></div>`;
+  }).join('');
+}
 function saveHS(h) { try { localStorage.setItem(HSKEY, JSON.stringify(h)); } catch (e) { } }
 function scoreOf(t, k) { return Math.round(t * 5 + k * 10); }
 
 function show(id) {
-  ['titleScreen', 'selScreen', 'lvlScreen', 'pauseScreen', 'overScreen'].forEach(s => $(s).classList.toggle('hidden', s !== id));
+  ['titleScreen', 'selScreen', 'lvlScreen', 'pauseScreen', 'overScreen', 'scoreScreen'].forEach(s => $(s).classList.toggle('hidden', s !== id));
   const inGame = (id === null);
   $('hud').classList.toggle('hidden', !(G.state === 'play' || G.state === 'pause'));
   $('pause').classList.toggle('hidden', G.state !== 'play');
@@ -2043,6 +2103,8 @@ function gameOver() {
   const rec = !prev || sc > prev.score;
   if (rec) hs[p.ch.id] = { score: sc, time: G.t, kills: G.kills, lvl: p.lvl, wp: p.wp.id };
   if (!hs.best || sc > hs.best.score) hs.best = { score: sc, time: G.t, kills: G.kills, char: p.ch.name, wp: p.wp.id };
+  const lauf = { score: sc, time: G.t, kills: G.kills, lvl: p.lvl, char: p.ch.name, wp: p.wp.id, ts: Date.now() };
+  hs.runs = sortRuns(hs.runs.concat([lauf]));
   // localStorage schreibt synchron und blockiert auf manchen Geräten spürbar.
   // Nicht in dem Bild, in dem gerade der Sterbe-Klang startet — sonst reißt er.
   setTimeout(() => saveHS(hs), 0);
@@ -2052,8 +2114,10 @@ function gameOver() {
   $('oLvl').textContent = p.lvl;
   $('oScore').textContent = sc;
   $('oRec').classList.toggle('hidden', !rec);
-  const b = hs.best;
-  $('oBest').innerHTML = b ? t('bestRun')(b.score, b.char + (b.wp ? ' · ' + tx(weaponById(b.wp).nm) : ''), fmtTime(b.time), b.kills) : '';
+  // Tabelle liest aus dem Speicher, der erst verzögert geschrieben wird —
+  // deshalb hier direkt aus dem schon aktualisierten Objekt zeichnen.
+  const merk = hs.runs; 
+  renderScoresFrom($('oScores'), merk, lauf.ts);
   show('overScreen');
 }
 function togglePause() {
@@ -2065,6 +2129,8 @@ $('btnResume').onclick = () => togglePause();
 $('btnQuit').onclick = () => { gameOver(); };
 $('btnStart').onclick = () => { initAudio(); resumeAudio(); buildCards(); G.state = 'select'; show('selScreen'); };
 $('btnBack').onclick = () => { G.state = 'title'; show('titleScreen'); refreshBest(); };
+$('btnScores').onclick = () => { renderScores('scoreList'); G.state = 'scores'; show('scoreScreen'); };
+$('btnScoresBack').onclick = () => { G.state = 'title'; show('titleScreen'); refreshBest(); };
 $('btnGo').onclick = () => startGame();
 $('btnAgain').onclick = () => startGame();
 $('btnMenu').onclick = () => { buildCards(); G.state = 'select'; show('selScreen'); };
@@ -2092,6 +2158,7 @@ function applyLang() {
   refreshSound();
   refreshBest();
   if (!$('selScreen').classList.contains('hidden')) buildCards();
+  if (!$('scoreScreen').classList.contains('hidden')) renderScores('scoreList');
   if (!ENGINE_OK) $('loadErr').textContent = t('noWebgl');
 }
 document.querySelectorAll('.langBtn').forEach(b => {
