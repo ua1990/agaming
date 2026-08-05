@@ -1007,10 +1007,18 @@ function buildProps() {
 
 /* ------------------------------- Fundstücke ------------------------------ */
 const MAX_PICKUPS = 3;
+// Die Bombe kommt in festem Takt, damit man sie einplanen kann
+const BOMB_INTERVALL = 120;
 /* Sucht einen freien Platz in Sichtweite, aber nicht direkt vor den Füßen —
    man soll hingehen müssen, statt es nebenbei aufzusammeln. */
 function spawnPickup(kind) {
-  if (G.pickups.length >= MAX_PICKUPS) return;
+  if (G.pickups.length >= MAX_PICKUPS) {
+    // Die Bombe hat Vorrang und hält ihren Takt: liegen zu viele Herzen
+    // herum, weicht das älteste. Sonst fiele sie zwei Minuten lang aus.
+    const i = kind === 'bomb' ? G.pickups.findIndex(q => q.kind === 'heart') : -1;
+    if (i < 0) return;
+    G.pickups.splice(i, 1);
+  }
   const p = G.p;
   for (let versuch = 0; versuch < 24; versuch++) {
     const a = Math.random() * TAU, d = rnd(9, 22);
@@ -1439,7 +1447,7 @@ function update(dt) {
   }
   if (G.t >= G.nextBoss) { G.nextBoss += 105; spawnEnemy('boss', 24); }
   // Fundstücke tauchen in unregelmäßigen Abständen auf
-  if (G.t >= G.nextBomb) { G.nextBomb = G.t + rnd(48, 78); spawnPickup('bomb'); }
+  if (G.t >= G.nextBomb) { G.nextBomb = G.t + BOMB_INTERVALL; spawnPickup('bomb'); }
   if (G.t >= G.nextHeart) { G.nextHeart = G.t + rnd(24, 40); spawnPickup('heart'); }
   G.wave = 1 + Math.floor(G.t / 30);
 
@@ -2165,7 +2173,7 @@ function startGame() {
   G.t = 0; G.kills = 0; G.wave = 1; G.spawnAcc = 0; G.nextBoss = 100; G.bossCount = 0; G.boss = null; G.lvlQueue = 0;
   G.enemies.length = 0; G.bullets.length = 0; G.ebullets.length = 0; G.orbs.length = 0;
   G.parts.length = 0; G.decals.length = 0; G.pops.length = 0;
-  G.pickups.length = 0; G.nextBomb = rnd(45, 65); G.nextHeart = rnd(20, 34);
+  G.pickups.length = 0; G.nextBomb = BOMB_INTERVALL; G.nextHeart = rnd(20, 34);
   G.shake = 0; G.flash = 0; G.camX = 0; G.camZ = 0;
   for (const k in _hud) delete _hud[k];
   buildProps();
