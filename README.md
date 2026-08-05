@@ -47,13 +47,15 @@ immer stärker wird.
 
 Die Geräusche werden zur Laufzeit mit der Web Audio API synthetisiert, es gibt
 also keine Audiodateien als separaten Download. Für **Level-Up** und **Sterben**
-liegen stattdessen eigene Aufnahmen als MP3-Daten-URI in `SAMPLES`, direkt in der
-HTML eingebettet. Fehlt eine Aufnahme oder lässt sie sich nicht dekodieren, greift
-automatisch wieder der synthetisierte Klang — das Spiel bleibt in jedem Fall hörbar.
+liegen stattdessen eigene Aufnahmen als Daten-URI in `SAMPLES`, unverändert im
+Originalformat (AAC/M4A) direkt in der HTML eingebettet. Fehlt eine Aufnahme oder
+lässt sie sich nicht dekodieren — etwa in einem Chromium-Build ohne AAC —, greift
+automatisch wieder der synthetisierte Klang; das Spiel bleibt in jedem Fall hörbar.
 
-Eigene Aufnahmen ersetzen: MP3 als `data:audio/mpeg;base64,...` in `SAMPLES`
-eintragen, die Abspiellautstärke regelt `SAMPLE_GAIN`. MP3 deshalb, weil es jeder
-Browser abspielt — AAC fehlt manchen Chromium-Builds.
+Eigene Aufnahmen ersetzen: Datei als `data:audio/mp4;base64,...` (oder
+`audio/mpeg` für MP3) unter `src` eintragen, `gain` daneben regelt die
+Abspiellautstärke. Kurze Aufnahmen mit **weichem Ein- und Ausblenden** verwenden:
+ein Pegelsprung von null auf voll knackt auf jedem Gerät hörbar.
 
 ## Technik
 
