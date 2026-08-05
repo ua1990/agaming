@@ -603,8 +603,54 @@ function initAudio() {
   try {
     AC = new (window.AudioContext || window.webkitAudioContext)();
     master = AC.createGain(); master.gain.value = 0.32; master.connect(AC.destination);
+    loadSamples();
   } catch (e) { audioOn = false; }
 }
+/* ---------------------- Eigene Aufnahmen (optional) ----------------------
+   Hier kann je ein selbst aufgenommener Klang als data:-URI eingetragen werden.
+   Leer bedeutet: es bleibt beim eingebauten Synthesizer-Sound. Schlägt das
+   Dekodieren fehl, wird ebenfalls auf den Synthesizer zurückgefallen, das Spiel
+   bleibt also in jedem Fall hörbar. Empfohlen: MP3 oder M4A, mono, kurz —
+   die Datei wird vollständig in diese HTML eingebettet.                      */
+const SAMPLES = {
+  level: '',   // beim Level-Up
+  dead: '',    // beim Sterben
+};
+const sampleBuf = {};
+function loadSamples() {
+  if (!AC) return;
+  for (const k in SAMPLES) {
+    const src = SAMPLES[k];
+    if (!src || k in sampleBuf) continue;
+    sampleBuf[k] = null;                       // belegt den Platz, kein zweiter Versuch
+    try {
+      const bin = atob(src.slice(src.indexOf(',') + 1));
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      // Chrome liefert zusätzlich ein Promise; ohne catch landet ein Dekodier-
+      // fehler als unbehandelte Ablehnung in der Konsole.
+      const p = AC.decodeAudioData(bytes.buffer, buf => { sampleBuf[k] = buf; }, () => { });
+      if (p && p.catch) p.catch(() => { });
+    } catch (e) { }
+  }
+}
+function playSample(k, vol) {
+  const buf = sampleBuf[k];
+  if (!buf || !AC || AC.state !== 'running') return false;
+  const s = AC.createBufferSource(); s.buffer = buf;
+  const g = AC.createGain(); g.gain.value = vol === undefined ? 1 : vol;
+  s.connect(g); g.connect(master); s.start();
+  return true;
+}
+
+/* iOS startet den Audiokontext angehalten; erst eine Nutzergeste weckt ihn.
+   Danach werden auch die eigenen Aufnahmen nachgeladen. */
+function resumeAudio() {
+  if (!AC) return;
+  if (AC.state === 'suspended') { try { AC.resume(); } catch (e) { } }
+  loadSamples();
+}
+
 let noiseBuf = null;
 function getNoise() {
   if (noiseBuf) return noiseBuf;
@@ -617,6 +663,8 @@ let sfxBudget = 0;
 function sfx(type, vol = 1) {
   if (!audioOn || !AC || AC.state !== 'running' || sfxBudget > 9) return;
   sfxBudget++;
+  // Eigene Aufnahme hat Vorrang, sonst der eingebaute Klang
+  if (SAMPLES[type] && playSample(type, vol)) return;
   const t = AC.currentTime;
   try {
     if (type === 'shot') {
@@ -1822,7 +1870,7 @@ function buildCards() {
 
 function startGame() {
   initAudio();
-  if (AC && AC.state === 'suspended') AC.resume();
+  resumeAudio();
   G.p = mkPlayer(G.char);
   G.t = 0; G.kills = 0; G.wave = 1; G.spawnAcc = 0; G.nextBoss = 100; G.bossCount = 0; G.boss = null; G.lvlQueue = 0;
   G.enemies.length = 0; G.bullets.length = 0; G.ebullets.length = 0; G.orbs.length = 0;
@@ -1865,7 +1913,7 @@ function togglePause() {
 $('pause').addEventListener('click', e => { e.stopPropagation(); togglePause(); });
 $('btnResume').onclick = () => togglePause();
 $('btnQuit').onclick = () => { gameOver(); };
-$('btnStart').onclick = () => { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); buildCards(); G.state = 'select'; show('selScreen'); };
+$('btnStart').onclick = () => { initAudio(); resumeAudio(); buildCards(); G.state = 'select'; show('selScreen'); };
 $('btnBack').onclick = () => { G.state = 'title'; show('titleScreen'); refreshBest(); };
 $('btnGo').onclick = () => startGame();
 $('btnAgain').onclick = () => startGame();
@@ -1906,7 +1954,7 @@ document.querySelectorAll('.langBtn').forEach(b => {
 });
 $('btnSound').onclick = () => {
   audioOn = !audioOn;
-  if (audioOn) { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); }
+  if (audioOn) { initAudio(); resumeAudio(); }
   try { localStorage.setItem(SNDKEY, audioOn ? '1' : '0'); } catch (e) { }
   refreshSound();
 };
