@@ -30,7 +30,11 @@ Horde immer stärker wird.
   Schutzkugeln, Sprengmunition).
 * **Gegner:** Walker, Runner, Brute, Spitter und Bomber — Leben, Tempo und
   Schaden skalieren mit der Überlebenszeit. Alle ~105 Sekunden kommt ein Boss.
-* **Highscore:** `Überlebenszeit × 5 + Kills × 10`, pro Charakter lokal gespeichert.
+* **Highscore:** `Überlebenszeit × 5 + Kills × 10`. Die **fünf besten Läufe** stehen
+  in einer Bestenliste, erreichbar über das Titelmenü und direkt nach dem Tod, dort
+  mit dem gerade gespielten Lauf hervorgehoben. Jeder Eintrag nennt Charakter,
+  Waffe, Zeit, Kills und Level. Zusätzlich merkt sich das Spiel je Charakter den
+  besten Lauf; alles lokal in `localStorage`.
 * **Rollen:** Die Charakternamen bleiben in beiden Sprachen gleich, Rollen und
   Waffen sind übersetzt (z. B. Ahmet – „Der Panzer" / „Tank", Schrotflinte /
   Pompalı Tüfek).
