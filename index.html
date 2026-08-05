@@ -57,8 +57,11 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
 #xpWrap{height:7px;background:rgba(0,0,0,.5);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
 #xpBar{height:100%;width:0%;background:linear-gradient(90deg,#39b6ff,#8be0ff);transition:width .12s}
 .row{display:flex;justify-content:space-between;align-items:flex-start;margin-top:7px;gap:8px}
-.pill{background:rgba(8,11,16,.62);border:1px solid rgba(255,255,255,.09);border-radius:11px;padding:5px 9px;
-  font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;display:flex;gap:9px;align-items:center;backdrop-filter:blur(6px)}
+/* Ohne backdrop-filter: das Weichzeichnen kostete auch bei diesen kleinen
+   Flächen spürbar Bildzeit, weil sie das ganze Spiel über dem laufenden
+   WebGL-Bild liegen. Stattdessen etwas kräftiger hinterlegt. */
+.pill{background:rgba(8,11,16,.78);border:1px solid rgba(255,255,255,.09);border-radius:11px;padding:5px 9px;
+  font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;display:flex;gap:9px;align-items:center}
 .pill .lb{color:#7e8b9f;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;display:block;font-weight:800}
 .pill .vl{font-size:15px;line-height:1.05}
 #hpWrap{position:absolute;left:calc(env(safe-area-inset-left) + 10px);right:calc(env(safe-area-inset-right) + 10px);
