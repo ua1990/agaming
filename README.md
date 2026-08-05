@@ -43,6 +43,18 @@ immer stärker wird.
 | Murat | Der Sturm | MP mit extremer Feuerrate |
 | Said | Der Beschützer | Pistole, kreisende Schutzkugeln, Regeneration |
 
+## Klang
+
+Die Geräusche werden zur Laufzeit mit der Web Audio API synthetisiert, es gibt
+also keine Audiodateien als separaten Download. Für **Level-Up** und **Sterben**
+liegen stattdessen eigene Aufnahmen als MP3-Daten-URI in `SAMPLES`, direkt in der
+HTML eingebettet. Fehlt eine Aufnahme oder lässt sie sich nicht dekodieren, greift
+automatisch wieder der synthetisierte Klang — das Spiel bleibt in jedem Fall hörbar.
+
+Eigene Aufnahmen ersetzen: MP3 als `data:audio/mpeg;base64,...` in `SAMPLES`
+eintragen, die Abspiellautstärke regelt `SAMPLE_GAIN`. MP3 deshalb, weil es jeder
+Browser abspielt — AAC fehlt manchen Chromium-Builds.
+
 ## Technik
 
 * Eigene WebGL-Engine (WebGL2 mit Fallback auf WebGL1 + `ANGLE_instanced_arrays`).
