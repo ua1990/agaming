@@ -50,6 +50,17 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
 .bar i{display:block;height:100%;border-radius:3px}
 .wp{margin-top:8px;font-size:11px;color:#f0c674;font-weight:800}
 .ds{margin-top:3px;font-size:10.5px;color:#93a1b5;font-weight:600;line-height:1.35}
+.wcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;width:100%;max-width:560px;margin-top:9px}
+.wcard{background:linear-gradient(165deg,#1b2231,#11151d);border:2px solid #262f40;border-radius:14px;
+  padding:10px 11px;cursor:pointer;transition:.14s;text-align:left}
+.wcard:active{transform:scale(.97)}
+.wcard.on{border-color:#f0c674;background:linear-gradient(165deg,#2c2718,#171410);box-shadow:0 0 0 3px rgba(240,198,116,.15)}
+.wcard .wn{font-size:14px;font-weight:900;display:flex;align-items:center;gap:7px;line-height:1.2}
+.wcard .wn i{font-style:normal;font-size:17px;flex:0 0 auto}
+.wcard .wd{font-size:10.5px;color:#93a1b5;font-weight:600;margin-top:4px;line-height:1.35}
+.wcard .std{display:flex;align-items:center;gap:6px;font-size:10px;color:#93a1b5;margin-top:6px;font-weight:700}
+.wcard .std b{width:42px;flex:0 0 auto;color:#6f7d92;letter-spacing:-.2px}
+.sig{font-size:9.5px;color:#7dd94f;font-weight:800;margin-top:5px;letter-spacing:.3px}
 .hs{margin-top:5px;font-size:10px;color:#6f7d92;font-weight:700}
 
 /* ---- HUD ---- */
@@ -175,6 +186,8 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
     <div class="selHead"><div class="selTitle" data-i18n="chooseFighter">Wähle deinen Kämpfer</div>
       <button class="btn alt small" id="btnBack" data-i18n="back" style="padding:8px 14px;font-size:13px">Zurück</button></div>
     <div class="cards" id="cards"></div>
+    <div class="selTitle" data-i18n="chooseWeapon" style="width:100%;max-width:560px;margin-top:18px">Und jetzt die Waffe</div>
+    <div class="wcards" id="wcards"></div>
     <button class="btn" id="btnGo" data-i18n="go" style="margin-top:14px;width:100%;max-width:560px">LOS GEHT'S</button>
     <div class="foot" data-i18n="tip">Tipp: Bleib in Bewegung. Sammle blaue Kristalle für Level-Ups.</div>
   </div>
@@ -247,7 +260,8 @@ const STR = {
     sndOn: '🔊 Ton', sndOff: '🔇 Stumm',
     hint: 'Bewege dich mit dem linken Daumen ·<br>Geschossen wird automatisch in Laufrichtung.',
     record: (s, t, k) => `🏆 Rekord: <b>${s}</b> Punkte · ${t} · ${k} Kills`,
-    chooseFighter: 'Wähle deinen Kämpfer', back: 'Zurück', go: "LOS GEHT'S",
+    chooseFighter: 'Wähle deinen Kämpfer', chooseWeapon: 'Und jetzt die Waffe',
+    stRange: 'Weite', signature: n => 'Tritt sonst an mit: ' + n, signatureTag: '★ STAMMWAFFE', back: 'Zurück', go: "LOS GEHT'S",
     tip: 'Du schießt, wohin du läufst — halte die Horde vor dir.',
     stHp: 'HP', stSpd: 'Tempo', stDps: 'DPS',
     noRecord: 'Noch kein Rekord', cardBest: (s, t) => `🏆 ${s} Pkt · ${t}`,
@@ -268,7 +282,8 @@ const STR = {
     sndOn: '🔊 Ses', sndOff: '🔇 Sessiz',
     hint: 'Sol başparmağınla hareket et ·<br>Ateş otomatik, koştuğun yöne.',
     record: (s, t, k) => `🏆 Rekor: <b>${s}</b> puan · ${t} · ${k} öldürme`,
-    chooseFighter: 'Savaşçını Seç', back: 'Geri', go: 'HADİ BAŞLAYALIM',
+    chooseFighter: 'Savaşçını Seç', chooseWeapon: 'Şimdi de silah',
+    stRange: 'Menzil', signature: n => 'Normalde şununla çıkar: ' + n, signatureTag: '★ ASIL SİLAHI', back: 'Geri', go: 'HADİ BAŞLAYALIM',
     tip: 'Koştuğun yöne ateş edersin — sürüyü hep önünde tut.',
     stHp: 'CAN', stSpd: 'Hız', stDps: 'DPS',
     noRecord: 'Henüz rekor yok', cardBest: (s, t) => `🏆 ${s} puan · ${t}`,
@@ -777,52 +792,74 @@ function buzz(ms) {
 }
 
 /* ------------------------------- Charaktere ------------------------------ */
+/* Charakter = Körper: Leben, Tempo, Aussehen und Eigenheiten.
+   Die Waffe wird getrennt gewählt, jeder Charakter kann jede führen.
+   'wp' nennt nur die Waffe, mit der er üblicherweise antritt.           */
 const CHARS = [
   {
     id: 'ahmet', name: 'Ahmet', role: { de: 'Der Panzer', tr: 'Tank' }, emoji: '🛡️',
     hp: 165, spd: 5.1, skin: [.79, .55, .37], hair: [.09, .08, .08], shirt: [.72, .20, .17], pants: [.17, .19, .24],
-    acc: 'cap', accCol: [.55, .13, .12], weapon: { de: 'Schrotflinte', tr: 'Pompalı Tüfek' },
-    gun: { type: 'shot', dmg: 10, rate: .70, count: 5, spread: .48, speed: 30, range: 14.5, size: .22, pierce: 1 },
-    desc: { de: 'Viel Leben, kurze Reichweite', tr: 'Çok can, kısa menzil' }
+    acc: 'cap', accCol: [.55, .13, .12], wp: 'shot',
+    desc: { de: 'Viel Leben, dafür langsam', tr: 'Çok can, buna karşılık yavaş' }
   },
   {
     id: 'deniz', name: 'Deniz', role: { de: 'Die Schnelle', tr: 'Hızlı Olan' }, emoji: '⚡',
     hp: 92, spd: 7.3, skin: [.88, .70, .55], hair: [.42, .22, .58], shirt: [.13, .78, .78], pants: [.13, .15, .20],
-    acc: 'pony', accCol: [.42, .22, .58], weapon: { de: 'Doppelpistolen', tr: 'Çift Tabanca' },
-    gun: { type: 'dual', dmg: 12, rate: .21, count: 1, spread: .05, speed: 40, range: 18, size: .18, pierce: 0 },
-    desc: { de: 'Sehr schnell, wendig', tr: 'Çok hızlı ve çevik' }
+    acc: 'pony', accCol: [.42, .22, .58], wp: 'dual',
+    desc: { de: 'Sehr schnell, aber zerbrechlich', tr: 'Çok hızlı ama kırılgan' }
   },
   {
     id: 'hamza', name: 'Hamza', role: { de: 'Der Sprengmeister', tr: 'Patlama Ustası' }, emoji: '💣',
     hp: 118, spd: 5.6, skin: [.66, .43, .25], hair: [.13, .09, .07], shirt: [.95, .60, .18], pants: [.22, .20, .17],
-    acc: 'beard', accCol: [.13, .09, .07], weapon: { de: 'Granatwerfer', tr: 'Bombaatar' },
-    gun: { type: 'gren', dmg: 24, rate: .90, count: 1, spread: .04, speed: 22, range: 16.5, size: .3, pierce: 0, splash: 3.9, splashDmg: 33 },
-    desc: { de: 'Flächenschaden, laut', tr: 'Alan hasarı, gürültülü' }
+    acc: 'beard', accCol: [.13, .09, .07], wp: 'gren',
+    desc: { de: 'Ausgewogen, verträgt einiges', tr: 'Dengeli, hayli dayanıklı' }
   },
   {
     id: 'mertcan', name: 'Mertcan', role: { de: 'Der Scharfschütze', tr: 'Keskin Nişancı' }, emoji: '🎯',
     hp: 95, spd: 5.9, skin: [.85, .64, .45], hair: [.23, .16, .10], shirt: [.16, .49, .24], pants: [.20, .23, .19],
-    acc: 'capb', accCol: [.14, .35, .18], weapon: { de: 'Scharfschützengewehr', tr: 'Keskin Nişancı Tüfeği' },
+    acc: 'capb', accCol: [.14, .35, .18], wp: 'snipe',
     aimAssist: 1,
-    gun: { type: 'snipe', dmg: 36, rate: .80, count: 1, spread: 0, speed: 62, range: 27, size: .2, pierce: 2 },
-    desc: { de: 'Weite Sicht, zielt vorne selbst', tr: 'Uzun menzil, önde kendi nişan alır' }
+    desc: { de: 'Einziger, der von selbst zielt (54°)', tr: 'Kendi nişan alan tek karakter (54°)' }
   },
   {
     id: 'murat', name: 'Murat', role: { de: 'Der Sturm', tr: 'Fırtına' }, emoji: '🔥',
     hp: 105, spd: 6.2, skin: [.75, .49, .30], hair: [.07, .07, .07], shirt: [.90, .89, .84], pants: [.12, .14, .18],
-    acc: 'none', accCol: [0, 0, 0], weapon: { de: 'MP mit Dauerfeuer', tr: 'Seri Atışlı Makineli' },
-    gun: { type: 'smg', dmg: 7.5, rate: .085, count: 1, spread: .13, speed: 38, range: 15.5, size: .15, pierce: 0 },
-    desc: { de: 'Feuerrate ohne Ende', tr: 'Bitmeyen atış hızı' }
+    acc: 'none', accCol: [0, 0, 0], wp: 'smg',
+    desc: { de: 'Solide Werte ohne Schwäche', tr: 'Zayıf yanı olmayan dengeli değerler' }
   },
   {
     id: 'said', name: 'Said', role: { de: 'Der Beschützer', tr: 'Koruyucu' }, emoji: '💠',
     hp: 130, spd: 6.0, skin: [.58, .38, .22], hair: [.10, .10, .10], shirt: [.47, .36, .84], pants: [.16, .16, .24],
-    acc: 'band', accCol: [.90, .80, .25], weapon: { de: 'Pistole + Schutzkugeln', tr: 'Tabanca + Koruma Küreleri' },
-    gun: { type: 'pist', dmg: 16, rate: .30, count: 1, spread: .06, speed: 36, range: 18, size: .19, pierce: 0 },
+    acc: 'band', accCol: [.90, .80, .25], wp: 'pist',
     orbs: 3, lifesteal: .05, regen: 1.1,
-    desc: { de: 'Kugeln kreisen & schützen', tr: 'Küreler etrafında döner ve korur' }
+    desc: { de: 'Schutzkugeln, heilt sich stetig', tr: 'Koruma küreleri, sürekli iyileşir' }
   }
 ];
+
+/* Waffen: frei zu jedem Charakter kombinierbar. */
+const WEAPONS = [
+  { id: 'shot', emoji: '💥', nm: { de: 'Schrotflinte', tr: 'Pompalı Tüfek' },
+    ds: { de: 'Fünf Kugeln auf einmal, kurze Reichweite', tr: 'Aynı anda beş saçma, kısa menzil' },
+    gun: { type: 'shot', dmg: 10, rate: .70, count: 5, spread: .48, speed: 30, range: 14.5, size: .22, pierce: 1 } },
+  { id: 'dual', emoji: '🔫', nm: { de: 'Doppelpistolen', tr: 'Çift Tabanca' },
+    ds: { de: 'Schnell und treffsicher, mittlere Reichweite', tr: 'Hızlı ve isabetli, orta menzil' },
+    gun: { type: 'dual', dmg: 12, rate: .21, count: 1, spread: .05, speed: 40, range: 18, size: .18, pierce: 0 } },
+  { id: 'gren', emoji: '💣', nm: { de: 'Granatwerfer', tr: 'Bombaatar' },
+    ds: { de: 'Flächenschaden, trifft ganze Gruppen', tr: 'Alan hasarı, tüm grubu vurur' },
+    gun: { type: 'gren', dmg: 24, rate: .90, count: 1, spread: .04, speed: 22, range: 16.5, size: .3, pierce: 0, splash: 3.9, splashDmg: 33 } },
+  { id: 'snipe', emoji: '🎯', nm: { de: 'Scharfschützengewehr', tr: 'Keskin Nişancı Tüfeği' },
+    ds: { de: 'Weiteste Reichweite, durchbohrt Gegner', tr: 'En uzun menzil, düşmanları deler' },
+    gun: { type: 'snipe', dmg: 36, rate: .80, count: 1, spread: 0, speed: 62, range: 27, size: .2, pierce: 2 } },
+  { id: 'smg', emoji: '🔥', nm: { de: 'Maschinenpistole', tr: 'Makineli Tabanca' },
+    ds: { de: 'Dauerfeuer, streut leicht', tr: 'Seri atış, hafif dağılır' },
+    gun: { type: 'smg', dmg: 7.5, rate: .085, count: 1, spread: .13, speed: 38, range: 15.5, size: .15, pierce: 0 } },
+  { id: 'pist', emoji: '🎖️', nm: { de: 'Pistole', tr: 'Tabanca' },
+    ds: { de: 'Kräftiger Einzelschuss, gute Reichweite', tr: 'Güçlü tek atış, iyi menzil' },
+    gun: { type: 'pist', dmg: 16, rate: .30, count: 1, spread: .06, speed: 36, range: 18, size: .19, pierce: 0 } },
+];
+const weaponById = id => WEAPONS.find(w => w.id === id) || WEAPONS[0];
+// Grobe Dauerleistung für die Balken in der Auswahl
+const weaponDps = w => w.gun.dmg * w.gun.count / w.gun.rate + (w.gun.splashDmg || 0) / w.gun.rate;
 
 /* ------------------------------- Upgrades -------------------------------- */
 const UPGRADES = [
@@ -866,16 +903,16 @@ const ARENA = 47;
 const G = {
   state: 'title',      // title | select | play | levelup | pause | over
   t: 0, kills: 0, wave: 1,
-  char: CHARS[0],
+  char: CHARS[0], wp: null,
   p: null,
   enemies: [], bullets: [], ebullets: [], orbs: [], parts: [], decals: [], props: [], pops: [],
   spawnAcc: 0, nextBoss: 100, boss: null, bossCount: 0, lvlQueue: 0,
   shake: 0, camX: 0, camZ: 0, flash: 0,
 };
 
-function mkPlayer(ch) {
+function mkPlayer(ch, wp) {
   return {
-    ch, x: 0, z: 0, y: 0, face: 0, aim: 0,
+    ch, wp, gun: wp.gun, x: 0, z: 0, y: 0, face: 0, aim: 0,
     hp: ch.hp, maxHp: ch.hp, spd: ch.spd,
     dmgMul: 1, rateMul: 1, spdMul: 1, rangeMul: 1,
     extraProj: 0, pierce: 0, crit: 0.03, regen: ch.regen || 0, magnet: 2.8,
@@ -1002,7 +1039,7 @@ function nearCells(x, z, out) {
 // anderen schießen ausnahmslos in Laufrichtung.
 const AIM_CONE = [0, 0.95, 1.9, Math.PI];
 function fire() {
-  const p = G.p, g = p.ch.gun;
+  const p = G.p, g = p.gun;
   const range = g.range * p.rangeMul;
   // Geschossen wird in Laufrichtung. Nur wer eine Zielhilfe mitbringt, fängt
   // Gegner in einem Kegel um diese Richtung ein.
@@ -1583,7 +1620,7 @@ function drawPlayer() {
   const p = G.p, ch = p.ch;
   const f = p.hitFlash;
   const aimRel = ((p.aim - p.face + Math.PI * 3) % TAU) - Math.PI;
-  const shoot = clamp(1 - p.cd / (ch.gun.rate * p.rateMul + .0001), 0, 1);
+  const shoot = clamp(1 - p.cd / (p.gun.rate * p.rateMul + .0001), 0, 1);
   const kick = (1 - shoot) * 0.35;
 
   const o = {
@@ -1613,7 +1650,7 @@ function drawPlayer() {
 
   // Waffe (zeigt in Zielrichtung)
   const wf = p.face + aimRel;
-  const gl_ = ch.gun;
+  const gl_ = p.gun;
   const gunLen = gl_.type === 'snipe' ? 1.35 : gl_.type === 'shot' ? 1.0 : gl_.type === 'gren' ? 0.85 : 0.72;
   const gunCol = [0.16, 0.17, 0.20];
   const recoil = (1 - shoot) * 0.22;
@@ -1942,19 +1979,39 @@ function buildCards() {
       `<div class="rl">${c.emoji} ${tx(c.role)}</div>` +
       `<div class="st"><b>${t('stHp')}</b><span class="bar"><i style="width:${clamp(c.hp / 170, 0, 1) * 100}%;background:#ff5c5c"></i></span></div>` +
       `<div class="st"><b>${t('stSpd')}</b><span class="bar"><i style="width:${clamp((c.spd - 4.6) / 3.0, 0, 1) * 100}%;background:#5cc8ff"></i></span></div>` +
-      `<div class="st"><b>${t('stDps')}</b><span class="bar"><i style="width:${clamp((c.gun.dmg * c.gun.count / c.gun.rate) / 90, 0, 1) * 100}%;background:#ffc85c"></i></span></div>` +
-      `<div class="wp">${tx(c.weapon)}</div>` +
       `<div class="ds">${tx(c.desc)}</div>` +
+      `<div class="wp">${t('signature')(tx(weaponById(c.wp).nm))}</div>` +
       `<div class="hs">${best ? t('cardBest')(best.score, fmtTime(best.time)) : t('noRecord')}</div>`;
-    d.onclick = () => { G.char = c; buildCards(); buzz(8); };
+    d.onclick = () => {
+      // Neuer Charakter bringt seine Stammwaffe mit; umwählen bleibt möglich
+      G.char = c; G.wp = weaponById(c.wp);
+      buildCards(); buzz(8);
+    };
     box.appendChild(d);
+  });
+
+  if (!G.wp) G.wp = weaponById(G.char.wp);
+  const wbox = $('wcards'); wbox.innerHTML = '';
+  const maxDps = Math.max(...WEAPONS.map(weaponDps));
+  WEAPONS.forEach(w => {
+    const d = document.createElement('div');
+    d.className = 'wcard' + (w === G.wp ? ' on' : '');
+    const g = w.gun;
+    d.innerHTML =
+      `<div class="wn"><i>${w.emoji}</i>${tx(w.nm)}</div>` +
+      `<div class="wd">${tx(w.ds)}</div>` +
+      `<div class="std"><b>${t('stDps')}</b><span class="bar"><i style="width:${clamp(weaponDps(w) / maxDps, 0, 1) * 100}%;background:#ffc85c"></i></span></div>` +
+      `<div class="std"><b>${t('stRange')}</b><span class="bar"><i style="width:${clamp(g.range / 27, 0, 1) * 100}%;background:#5cc8ff"></i></span></div>` +
+      (w.id === G.char.wp ? `<div class="sig">${t('signatureTag')}</div>` : '');
+    d.onclick = () => { G.wp = w; buildCards(); buzz(8); };
+    wbox.appendChild(d);
   });
 }
 
 function startGame() {
   initAudio();
   resumeAudio();
-  G.p = mkPlayer(G.char);
+  G.p = mkPlayer(G.char, G.wp);
   G.t = 0; G.kills = 0; G.wave = 1; G.spawnAcc = 0; G.nextBoss = 100; G.bossCount = 0; G.boss = null; G.lvlQueue = 0;
   G.enemies.length = 0; G.bullets.length = 0; G.ebullets.length = 0; G.orbs.length = 0;
   G.parts.length = 0; G.decals.length = 0; G.pops.length = 0;
@@ -1976,8 +2033,8 @@ function gameOver() {
   const hs = loadHS();
   const prev = hs[p.ch.id];
   const rec = !prev || sc > prev.score;
-  if (rec) hs[p.ch.id] = { score: sc, time: G.t, kills: G.kills, lvl: p.lvl };
-  if (!hs.best || sc > hs.best.score) hs.best = { score: sc, time: G.t, kills: G.kills, char: p.ch.name };
+  if (rec) hs[p.ch.id] = { score: sc, time: G.t, kills: G.kills, lvl: p.lvl, wp: p.wp.id };
+  if (!hs.best || sc > hs.best.score) hs.best = { score: sc, time: G.t, kills: G.kills, char: p.ch.name, wp: p.wp.id };
   // localStorage schreibt synchron und blockiert auf manchen Geräten spürbar.
   // Nicht in dem Bild, in dem gerade der Sterbe-Klang startet — sonst reißt er.
   setTimeout(() => saveHS(hs), 0);
@@ -1988,7 +2045,7 @@ function gameOver() {
   $('oScore').textContent = sc;
   $('oRec').classList.toggle('hidden', !rec);
   const b = hs.best;
-  $('oBest').innerHTML = b ? t('bestRun')(b.score, b.char, fmtTime(b.time), b.kills) : '';
+  $('oBest').innerHTML = b ? t('bestRun')(b.score, b.char + (b.wp ? ' · ' + tx(weaponById(b.wp).nm) : ''), fmtTime(b.time), b.kills) : '';
   show('overScreen');
 }
 function togglePause() {

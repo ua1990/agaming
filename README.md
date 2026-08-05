@@ -34,16 +34,30 @@ wie möglich, während die Horde immer stärker wird.
   Waffen sind übersetzt (z. B. Ahmet – „Der Panzer" / „Tank", Schrotflinte /
   Pompalı Tüfek).
 
-## Charaktere
+## Charaktere und Waffen
 
-| Charakter | Rolle | Waffe |
-|---|---|---|
-| Ahmet | Der Panzer | Schrotflinte, viel Leben, langsam |
-| Deniz | Die Schnelle | Doppelpistolen, sehr wendig |
-| Hamza | Der Sprengmeister | Granatwerfer mit Flächenschaden |
-| Mertcan | Der Scharfschütze | Große Reichweite, einziger mit Zielkegel (54°) |
-| Murat | Der Sturm | MP mit extremer Feuerrate |
-| Said | Der Beschützer | Pistole, kreisende Schutzkugeln, Regeneration |
+Charakter und Waffe werden getrennt gewählt — **jeder Charakter kann jede Waffe
+führen**, macht also 36 Kombinationen. Der Charakter bestimmt Leben, Tempo,
+Aussehen und Eigenheiten; die Waffe bestimmt Schaden, Feuerrate und Reichweite.
+Wählt man einen Charakter, ist seine Stammwaffe vorausgewählt.
+
+| Charakter | Rolle | Eigenheit | Stammwaffe |
+|---|---|---|---|
+| Ahmet | Der Panzer | 165 HP, langsam | Schrotflinte |
+| Deniz | Die Schnelle | 92 HP, sehr schnell | Doppelpistolen |
+| Hamza | Der Sprengmeister | 118 HP, ausgewogen | Granatwerfer |
+| Mertcan | Der Scharfschütze | einziger mit Zielkegel (54°) | Scharfschützengewehr |
+| Murat | Der Sturm | 105 HP, ohne Schwäche | Maschinenpistole |
+| Said | Der Beschützer | Schutzkugeln, Regeneration | Pistole |
+
+| Waffe | Kennzeichen |
+|---|---|
+| Schrotflinte | fünf Kugeln auf einmal, kurze Reichweite |
+| Doppelpistolen | schnell und treffsicher, mittlere Reichweite |
+| Granatwerfer | Flächenschaden, trifft ganze Gruppen |
+| Scharfschützengewehr | weiteste Reichweite, durchbohrt Gegner |
+| Maschinenpistole | Dauerfeuer, streut leicht |
+| Pistole | kräftiger Einzelschuss, gute Reichweite |
 
 ## Klang
 
