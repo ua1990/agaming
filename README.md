@@ -43,11 +43,28 @@ Horde immer stärker wird.
   niederringt, gewinnt — mit 5000 Punkten Aufschlag. Die Zeitanzeige zählt in der
   zweiten Hälfte zu ihm herunter.
 * **Gegner:** Walker, Runner, Brute, Spitter und Bomber — Leben, Tempo und
-  Schaden skalieren mit der Überlebenszeit, der Zuwachs zieht später an. Alle
-  **alle 3 Minuten** kommt ein Boss, und jeder ist rund doppelt so stark wie der
-  vorige (2.700 → 10.000 → 23.000 → 43.000 Leben). Ab fünf Minuten wird ein
-  wachsender Teil der Horde zu **Elitegegnern**: mehr als doppelt so zäh,
-  kräftiger eingefärbt.
+  Schaden skalieren mit der Überlebenszeit, der Zuwachs zieht später an. Ab fünf
+  Minuten wird ein wachsender Teil der Horde zu **Elitegegnern**: mehr als
+  doppelt so zäh, kräftiger eingefärbt.
+* **Bosse:** Alle **3 Minuten** kommt einer, und jeder ist rund doppelt so stark
+  wie der vorige (2.700 → 10.000 → 23.000 → 43.000 Leben). Sie laufen dir nicht
+  bloß hinterher, sondern haben eigene Angriffe — jeder davon **angekündigt**
+  (geduckte Haltung, leuchtender Ring), also ausweichbar:
+  * **Sprung** — eine Landemarke erscheint dort, wo du gerade stehst; kurz
+    darauf springt der Boss hinein und schlägt beim Aufkommen eine Druckwelle.
+    Stehenbleiben wird bestraft.
+  * **Druckwelle** — ein Ring läuft aus dem Boss nach außen. Wer schon außerhalb
+    steht, bleibt heil; wer an ihm klebt, nicht.
+  * **Ruf** — Verstärkung erscheint rings um **dich**, nicht um den Boss.
+    Einfach wegrennen hilft also nicht mehr.
+  * **Salve** (nur der Endgegner) — ein Kugelfächer in alle Richtungen, mit
+    Lücken dazwischen.
+
+  Nach jedem Angriff steht der Boss kurz still — das ist das verlässliche
+  Fenster zum Zurückschlagen. Je länger der Kampf dauert, desto kürzer werden
+  seine Pausen und desto schneller läuft er; aussitzen geht nicht. Dafür
+  schlägt er im Nahkampf seltener zu als die Horde, weil ein Treffer ein
+  Vielfaches austeilt.
 * **Highscore:** `Überlebenszeit × 5 + Kills × 10`. Die **fünf besten Läufe** stehen
   in einer Bestenliste, erreichbar über das Titelmenü und direkt nach dem Tod, dort
   mit dem gerade gespielten Lauf hervorgehoben. Jeder Eintrag nennt Charakter,
@@ -55,11 +72,14 @@ Horde immer stärker wird.
   besten Lauf; alles lokal in `localStorage`.
 * **Online-Bestenliste (optional):** Wer Läufe mit Freunden vergleichen will,
   stellt den kleinen Dienst unter [`server/`](server/) dazu — ein Cloudflare
-  Worker in einer Datei. Im Spiel oben unter `ONLINE` Adresse und **Raumcode**
-  eintragen; nur wer denselben Code hat, sieht dieselbe Liste. Einträge nennen
-  **Charakter und Waffe**, es werden keine Spielernamen vergeben. Ohne Eintrag
-  bleibt alles rein lokal und es gibt keinerlei Netzaufrufe. Einzelheiten und
-  Grenzen stehen in [`server/README.md`](server/README.md).
+  Worker in einer Datei. **Eingerichtet wird im Spiel selbst:** Bestenliste →
+  Reiter *Freunde* → Serveradresse und frei gewählter **Raumcode**, fertig. Die
+  Angaben bleiben auf dem Gerät gespeichert. Über **Einladung teilen** entsteht
+  ein Link, der beides mitbringt — wer ihn antippt, ist im selben Raum, ohne
+  etwas abzutippen. Nur wer denselben Code hat, sieht dieselbe Liste. Einträge
+  nennen **Charakter und Waffe**, es werden keine Spielernamen vergeben. Ohne
+  Einrichtung bleibt alles rein lokal und es gibt keinerlei Netzaufrufe.
+  Einzelheiten und Grenzen stehen in [`server/README.md`](server/README.md).
 * **Rollen:** Die Charakternamen bleiben in beiden Sprachen gleich, Rollen und
   Waffen sind übersetzt (z. B. Ahmet – „Der Panzer" / „Tank", Schrotflinte /
   Pompalı Tüfek).

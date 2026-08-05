@@ -157,6 +157,14 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
 .hsrow .wo{flex:0 0 auto;font-size:9.5px;color:#6f7d92;font-weight:800;letter-spacing:.4px;
   align-self:flex-start;margin-top:2px}
 .foot{margin-top:16px;font-size:11px;color:#5f6b7d;text-align:center;line-height:1.6}
+/* ---- Freundes-Einrichtung ---- */
+#freundeSetup{width:100%;max-width:420px;margin-top:14px;display:flex;flex-direction:column;gap:9px}
+#freundeSetup .erklaer{font-size:12px;color:#8b97ab;line-height:1.6;text-align:left}
+#freundeSetup input{appearance:none;width:100%;box-sizing:border-box;background:#121722;color:#eaf1fb;
+  border:1px solid #2a3346;border-radius:12px;padding:13px 14px;font:inherit;font-size:15px;font-weight:700}
+#freundeSetup input:focus{outline:0;border-color:#7dd94f}
+#freundeSetup .fehler{font-size:12px;color:#ff8f8f;text-align:left;min-height:15px;line-height:1.4}
+.raumzeile{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:12px}
 .langRow{display:flex;gap:0;margin-top:18px;border:1px solid #2a3346;border-radius:12px;overflow:hidden;background:#121722}
 .langBtn{appearance:none;border:0;background:transparent;color:#8b97ab;font-size:14px;font-weight:800;
   padding:10px 20px;cursor:pointer;font-family:inherit;transition:.12s}
@@ -239,11 +247,22 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
   <div id="scoreScreen" class="screen hidden">
     <h1 style="font-size:30px" data-i18n="scoresTitle">Bestenliste</h1>
     <div class="sub" id="scoreSub" data-i18n="scoresSub">Die fünf besten Läufe</div>
-    <div class="tabs hidden" id="scoreTabs">
+    <div class="tabs" id="scoreTabs">
       <button class="tab on" data-tab="lokal" data-i18n="tabLokal">Dieses Gerät</button>
       <button class="tab" data-tab="online" data-i18n="tabOnline">Freunde</button>
     </div>
     <div class="hstable" id="scoreList"></div>
+    <div class="raumzeile hidden" id="raumZeile">
+      <button class="btn alt small" id="btnTeilen" data-i18n="teilen">Einladung teilen</button>
+      <button class="btn alt small" id="btnRaumAendern" data-i18n="raumAendern">Raum ändern</button>
+    </div>
+    <div id="freundeSetup" class="hidden">
+      <div class="erklaer" id="setupErklaer"></div>
+      <input id="inpServer" type="url" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="https://…workers.dev">
+      <input id="inpRaum" type="text" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="freunde-code">
+      <div class="fehler" id="setupFehler"></div>
+      <button class="btn" id="btnSetupSave" data-i18n="setupSave">Verbinden</button>
+    </div>
     <button class="btn alt" id="btnScoresBack" data-i18n="back" style="margin-top:20px">Zurück</button>
   </div>
 
@@ -305,6 +324,13 @@ const STR = {
     scoresBtn: '🏆 Bestenliste', scoresTitle: 'Bestenliste', scoresSub: 'Die fünf besten Läufe',
     tabLokal: 'Dieses Gerät', tabOnline: 'Freunde',
     scoresSubOnline: r => 'Raum: ' + r,
+    setupErklaer: 'Damit ihr eure Läufe vergleichen könnt, braucht ihr einen eigenen kleinen Server ' +
+      '(Anleitung: Ordner <b>server/</b> im Projekt) und einen frei gewählten Raumcode. ' +
+      'Alle mit derselben Adresse und demselben Code sehen dieselbe Liste.',
+    setupSave: 'Verbinden', teilen: '🔗 Einladung teilen', raumAendern: 'Raum ändern',
+    setupUrlFehler: 'Die Serveradresse muss mit https:// beginnen.',
+    setupRaumFehler: 'Raumcode: 3 bis 32 Zeichen, nur a–z, 0–9 und Bindestrich.',
+    teilenKopiert: 'Einladungslink kopiert!',
     laedt: 'Wird geladen …',
     netzFehler: f => 'Liste nicht erreichbar.<br>' + f,
     sende: 'Wird eingetragen …',
@@ -342,6 +368,13 @@ const STR = {
     scoresBtn: '🏆 En İyiler', scoresTitle: 'En İyiler', scoresSub: 'En iyi beş tur',
     tabLokal: 'Bu cihaz', tabOnline: 'Arkadaşlar',
     scoresSubOnline: r => 'Oda: ' + r,
+    setupErklaer: 'Turlarınızı karşılaştırabilmek için kendi küçük sunucunuza ' +
+      '(kılavuz: projedeki <b>server/</b> klasörü) ve kendi seçtiğiniz bir oda koduna ihtiyacınız var. ' +
+      'Aynı adresi ve aynı kodu girenler aynı listeyi görür.',
+    setupSave: 'Bağlan', teilen: '🔗 Davet gönder', raumAendern: 'Odayı değiştir',
+    setupUrlFehler: 'Sunucu adresi https:// ile başlamalı.',
+    setupRaumFehler: 'Oda kodu: 3 ilâ 32 karakter, yalnızca a–z, 0–9 ve tire.',
+    teilenKopiert: 'Davet bağlantısı kopyalandı!',
     laedt: 'Yükleniyor …',
     netzFehler: f => 'Listeye ulaşılamadı.<br>' + f,
     sende: 'Kaydediliyor …',
@@ -963,9 +996,33 @@ const ETYPES = {
   brute: { hp: 105, spd: 1.72, dmg: 22, xp: 9, r: .95, sc: 1.72, col: [.36, .27, .34], from: 85, w: 22 },
   spitter: { hp: 26, spd: 1.95, dmg: 8, xp: 6, r: .55, sc: 1.02, col: [.24, .52, .45], from: 130, w: 20, ranged: true },
   bomber: { hp: 34, spd: 3.05, dmg: 10, xp: 6, r: .58, sc: 1.06, col: [.62, .30, .16], from: 175, w: 20, explode: true },
-  boss: { hp: 430, spd: 2.05, dmg: 34, xp: 80, r: 1.7, sc: 3.0, col: [.46, .13, .16], from: 9999, w: 0, boss: true },
-  endboss: { hp: 3000, spd: 2.25, dmg: 48, xp: 400, r: 2.3, sc: 4.2, col: [.30, .06, .30], from: 9999, w: 0, boss: true, ende: true },
+  boss: { hp: 430, spd: 2.62, dmg: 34, xp: 80, r: 1.7, sc: 3.0, col: [.46, .13, .16], from: 9999, w: 0, boss: true },
+  endboss: { hp: 3000, spd: 2.95, dmg: 48, xp: 400, r: 2.3, sc: 4.2, col: [.30, .06, .30], from: 9999, w: 0, boss: true, ende: true },
 };
+
+/* ------------------------------ Bossverhalten -----------------------------
+   Bisher war ein Boss nur ein großer Walker: dieselbe KI, bloß mehr Leben.
+   Weil der Spieler doppelt so schnell läuft, ließ sich jeder Boss beliebig
+   im Kreis herumführen — die Kämpfe kosteten Zeit, aber sie waren nie
+   gefährlich. Deshalb bekommt jeder Boss jetzt eigene Angriffe:
+
+     Sprung    setzt eine Landemarke auf die aktuelle Position des Spielers
+               und springt dorthin — Stehenbleiben wird bestraft.
+     Welle     eine Druckwelle im Nahbereich — Klebenbleiben wird bestraft.
+     Ruf       Verstärkung erscheint rings um den Spieler, nicht um den Boss —
+               Weglaufen wird bestraft.
+     Salve     nur der Endgegner: ein Kugelfächer in alle Richtungen.
+
+   Jeder Angriff wird angekündigt (geduckte Haltung, leuchtender Ring), ist
+   also ausweichbar. Wer stehen bleibt, zahlt.
+
+   Die Vorwarnzeit ist so bemessen, dass auch die langsamste Figur (Tempo 5,1)
+   aus der Landemarke herauskommt: 0,75 s Ankündigung plus 0,42 s Sprung
+   reichen für gut 5,9 Strecke, die Marke misst 5,2.                       */
+const B_ANKUENDIGUNG = 0.75;   // Vorwarnzeit
+const B_SPRUNGZEIT = 0.42;
+const B_ERHOLUNG = 0.50;       // Erstarrung danach — das Fenster zum Draufhalten
+const B_SPRUNGRING = 5.2;      // getroffener Bereich beim Aufkommen
 const BOSS_NAMES = [
   { de: 'Der Große Amınoğlu', tr: 'Büyük Amınoğlu' },
   { de: 'Fleischberg', tr: 'Et Dağı' },
@@ -985,7 +1042,7 @@ const G = {
   char: CHARS[0], wp: weaponById(CHARS[0].wp),   // nie leer: Stammwaffe ist vorgewählt
   p: null,
   enemies: [], bullets: [], ebullets: [], orbs: [], parts: [], decals: [], props: [], pops: [],
-  pickups: [], nextBomb: 0, nextHeart: 0, endbossDa: false, gewonnen: false,
+  pickups: [], wellen: [], nextBomb: 0, nextHeart: 0, endbossDa: false, gewonnen: false,
   spawnAcc: 0, nextBoss: 180, boss: null, bossCount: 0, lvlQueue: 0,
   shake: 0, camX: 0, camZ: 0, flash: 0,
 };
@@ -1135,6 +1192,11 @@ function spawnEnemy(type, forceR) {
                        : BOSS_NAMES[Math.min(BOSS_NAMES.length - 1, (G.wave / 4) | 0)];
     e.hp = e.maxHp = T.ende ? T.hp * Math.pow(d, 1.15)
                             : T.hp * Math.pow(d, 1.22) * (1 + G.bossCount * 0.9);
+    // Zustand für die Angriffsfolge; grundTempo bleibt als Bezugswert stehen,
+    // weil die Wut das laufende Tempo hochzieht
+    e.bs = 'lauf'; e.bt = 0; e.bcd = T.ende ? 2.2 : 3.4; e.rage = 0; e.zyklus = 0;
+    e.plan = ''; e.wr = 0; e.zx = 0; e.zz = 0; e.lvx = 0; e.lvz = 0;
+    e.grundTempo = e.spd;
     G.boss = e;
     sfx('boss'); buzz([40, 60, 90]);
     toast(t('tBoss'), '#ff6a6a');
@@ -1280,6 +1342,122 @@ function miniBoom(x, z, radius, dmg) {
   G.shake = Math.min(G.shake + .08, 1.35);
   if (G.t - lastBoomSfx > 0.14) { lastBoomSfx = G.t; sfx('boom', .3); }
   areaDamage(x, z, radius, dmg, 4);
+}
+
+/* ---------------------------- Bossfähigkeiten ---------------------------- */
+/* Druckwelle: ein Ring, der nach außen läuft. Getroffen wird, wen er
+   überstreicht — wer schon außerhalb der Endgröße steht, bleibt heil. */
+function bossWelle(e, dmg) {
+  G.wellen.push({
+    x: e.x, z: e.z, r: 0.7, rMax: e.wr || 7, dmg, getroffen: false,
+    col: e.T.ende ? [.78, .34, 1] : [1, .44, .22],
+  });
+  spawnParts(e.x, .5, e.z, 20, e.T.ende ? [.8, .35, 1] : [1, .55, .22], 12, .5, .26, 14);
+  G.shake = Math.min(1.45, G.shake + .7);
+  sfx('boom', .8); buzz(30);
+}
+/* Verstärkung erscheint um den SPIELER, nicht um den Boss: sonst wäre
+   Weglaufen weiterhin die beste Antwort auf alles. */
+function bossRuf(e) {
+  const n = e.T.ende ? 9 : 5;
+  const art = G.t > 90 ? 'runner' : 'walker';
+  for (let i = 0; i < n; i++) {
+    if (G.enemies.length > 195) break;
+    spawnEnemy(art, rnd(8, 13));
+  }
+  spawnParts(e.x, 1.4 * e.sc, e.z, 18, [1, .82, .3], 9, .6, .22, 6);
+  sfx('boss', .55); buzz([20, 40, 20]);
+}
+/* Nur der Endgegner: ein Fächer in alle Richtungen. Dazwischen bleiben
+   Lücken — man muss hindurch, nicht davonlaufen. */
+function bossSalve(e) {
+  const n = 16, basis = Math.random() * TAU;
+  for (let i = 0; i < n; i++) {
+    const a = basis + i / n * TAU;
+    G.ebullets.push({ x: e.x, y: 1.3, z: e.z, vx: Math.sin(a) * 15, vz: Math.cos(a) * 15,
+                      life: 3.6, dmg: e.dmg * .5, r: .3 });
+  }
+  spawnParts(e.x, 1.3, e.z, 14, [.7, .35, 1], 10, .45, .2, 6);
+  sfx('boss', .5);
+}
+function bossPause(e) {
+  const grund = e.T.ende ? 3.2 : 4.4;
+  return Math.max(1.5, grund - e.rage * 1.9) * rnd(.85, 1.15);
+}
+/* Steuert den Boss. Gibt true zurück, wenn er seine Bewegung in diesem Bild
+   selbst bestimmt hat — dann überspringt die Schleife die Verfolgungs-KI. */
+function bossAi(e, dt, d, dx, dz) {
+  const p = G.p;
+  // Wut wächst über den Kampf: Aussitzen soll keine Taktik sein
+  e.rage = Math.min(1, e.rage + dt / 55);
+  e.spd = e.grundTempo * (1 + e.rage * .40);
+  e.bt -= dt;
+
+  if (e.bs === 'sammeln') {
+    if (e.bt <= 0) {
+      if (e.plan === 'sprung') {
+        e.bs = 'sprung'; e.bt = B_SPRUNGZEIT;
+        const wx = e.zx - e.x, wz = e.zz - e.z;
+        e.lvx = wx / B_SPRUNGZEIT; e.lvz = wz / B_SPRUNGZEIT;
+        e.face = Math.atan2(wx, wz);
+      } else if (e.plan === 'welle') {
+        e.bs = 'erholung'; e.bt = B_ERHOLUNG;
+        bossWelle(e, e.dmg);
+      } else if (e.plan === 'salve') {
+        e.bs = 'erholung'; e.bt = B_ERHOLUNG * .7;
+        bossSalve(e);
+      } else {
+        e.bs = 'erholung'; e.bt = B_ERHOLUNG * .7;
+        bossRuf(e);
+      }
+    }
+    return true;
+  }
+  if (e.bs === 'sprung') {
+    e.x += e.lvx * dt; e.z += e.lvz * dt;
+    e.y = Math.sin(clamp(1 - e.bt / B_SPRUNGZEIT, 0, 1) * Math.PI) * 3.4;
+    if (e.bt <= 0) {
+      e.y = 0; e.x = e.zx; e.z = e.zz;
+      e.bs = 'erholung'; e.bt = B_ERHOLUNG;
+      bossWelle(e, e.dmg * 1.25);
+    }
+    return true;
+  }
+  if (e.bs === 'erholung') {
+    // Bewusst regungslos: das verlässliche Zeitfenster zum Zurückschlagen
+    if (e.bt <= 0) { e.bs = 'lauf'; e.bcd = bossPause(e); }
+    return true;
+  }
+
+  e.bcd -= dt;
+  if (e.bcd <= 0) {
+    e.zyklus++;
+    // Feste Reihenfolge statt Wahl nach Abstand: der Boss klebt fast immer am
+    // Spieler, nach Abstand entschieden käme der Sprung so gut wie nie vor.
+    // Landet er dabei auf kurzer Strecke, ist das kein Verlust — die Marke
+    // liegt auf dem Spieler, ausweichen muss er trotzdem.
+    if (e.T.ende) {
+      const r = e.zyklus % 4;
+      e.plan = r === 1 ? 'ruf' : r === 2 ? 'welle' : r === 3 ? 'salve' : 'sprung';
+    } else {
+      const r = e.zyklus % 3;
+      e.plan = r === 1 ? 'sprung' : r === 2 ? 'welle' : 'ruf';
+    }
+    e.wr = e.plan === 'sprung' ? B_SPRUNGRING * (e.T.ende ? 1.25 : 1)
+                               : (e.T.ende ? 8.5 : 7.0);
+    if (e.plan === 'sprung') {
+      // Landemarke jetzt festlegen, nicht erst beim Absprung: nur so ist der
+      // Sprung ehrlich ausweichbar
+      const w = Math.min(d, 30);
+      e.zx = e.x + dx * w; e.zz = e.z + dz * w;
+      const zd = Math.hypot(e.zx, e.zz);
+      if (zd > ARENA - 2) { const k = (ARENA - 2) / zd; e.zx *= k; e.zz *= k; }
+    }
+    e.bs = 'sammeln'; e.bt = B_ANKUENDIGUNG;
+    sfx('boss', .45);
+    return true;
+  }
+  return false;
 }
 
 // ohneRaub: Schaden, der ohne Zutun des Spielers entsteht (Schutzkugeln).
@@ -1528,60 +1706,66 @@ function update(dt) {
     let dx = p.x - e.x, dz = p.z - e.z;
     const d = Math.hypot(dx, dz) || 1;
     dx /= d; dz /= d;
-    e.face = angLerp(e.face, Math.atan2(dx, dz), Math.min(1, dt * 7));
+    // Bosse steuern sich in Ankündigung, Sprung und Erholung selbst
+    const eigen = e.T.boss ? bossAi(e, dt, d, dx, dz) : false;
+    if (!eigen) e.face = angLerp(e.face, Math.atan2(dx, dz), Math.min(1, dt * 7));
 
-    let vx = 0, vz = 0;
-    const stopD = e.r + 0.55;
-    if (e.T.ranged) {
-      // Spitter hält Abstand
-      if (d > 12) { vx = dx; vz = dz; }
-      else if (d < 8) { vx = -dx; vz = -dz; }
-      else { vx = -dz * .5; vz = dx * .5; }
-      e.shootCd -= dt;
-      if (e.shootCd <= 0 && d < 17) {
-        e.shootCd = rnd(2.2, 3.6);
-        const a = Math.atan2(dx, dz);
-        G.ebullets.push({ x: e.x, y: 1.0, z: e.z, vx: Math.sin(a) * 13, vz: Math.cos(a) * 13, life: 2.2, dmg: e.dmg, r: .26 });
-      }
-    } else if (d > stopD) { vx = dx; vz = dz; }
+    if (!eigen) {
+      let vx = 0, vz = 0;
+      const stopD = e.r + 0.55;
+      if (e.T.ranged) {
+        // Spitter hält Abstand
+        if (d > 12) { vx = dx; vz = dz; }
+        else if (d < 8) { vx = -dx; vz = -dz; }
+        else { vx = -dz * .5; vz = dx * .5; }
+        e.shootCd -= dt;
+        if (e.shootCd <= 0 && d < 17) {
+          e.shootCd = rnd(2.2, 3.6);
+          const a = Math.atan2(dx, dz);
+          G.ebullets.push({ x: e.x, y: 1.0, z: e.z, vx: Math.sin(a) * 13, vz: Math.cos(a) * 13, life: 2.2, dmg: e.dmg, r: .26 });
+        }
+      } else if (d > stopD) { vx = dx; vz = dz; }
 
-    // Trennung
-    const cells = nearCells(e.x, e.z, tmpCells);
-    let sx = 0, sz = 0;
-    for (let ci = 0; ci < cells.length; ci++) {
-      const arr = cells[ci];
-      for (let j = 0; j < arr.length; j++) {
-        const o = arr[j]; if (o === e || o.dead) continue;
-        const ox = e.x - o.x, oz = e.z - o.z;
-        const od2 = ox * ox + oz * oz, mr = e.r + o.r;
-        if (od2 < mr * mr && od2 > 0.0001) {
-          const od = Math.sqrt(od2), f = (mr - od) / mr;
-          sx += ox / od * f; sz += oz / od * f;
+      // Trennung
+      const cells = nearCells(e.x, e.z, tmpCells);
+      let sx = 0, sz = 0;
+      for (let ci = 0; ci < cells.length; ci++) {
+        const arr = cells[ci];
+        for (let j = 0; j < arr.length; j++) {
+          const o = arr[j]; if (o === e || o.dead) continue;
+          const ox = e.x - o.x, oz = e.z - o.z;
+          const od2 = ox * ox + oz * oz, mr = e.r + o.r;
+          if (od2 < mr * mr && od2 > 0.0001) {
+            const od = Math.sqrt(od2), f = (mr - od) / mr;
+            sx += ox / od * f; sz += oz / od * f;
+          }
         }
       }
-    }
-    const sl = Math.hypot(sx, sz);
-    if (sl > 0) { vx += sx / sl * Math.min(1.6, sl * 2.4); vz += sz / sl * Math.min(1.6, sl * 2.4); }
+      const sl = Math.hypot(sx, sz);
+      if (sl > 0) { vx += sx / sl * Math.min(1.6, sl * 2.4); vz += sz / sl * Math.min(1.6, sl * 2.4); }
 
-    const vl = Math.hypot(vx, vz);
-    if (vl > 0.0001) {
-      const wob = Math.sin(G.t * 2.4 + e.wob) * 0.10;
-      const cs = Math.cos(wob), sn = Math.sin(wob);
-      const nvx = (vx * cs - vz * sn) / vl, nvz = (vx * sn + vz * cs) / vl;
-      e.x += nvx * e.spd * dt; e.z += nvz * e.spd * dt;
-      e.walk += dt * (2.5 + e.spd * 1.6);
-    }
-    if (e.kb > 0) {
-      e.x += e.kbx * e.kb * 9 * dt; e.z += e.kbz * e.kb * 9 * dt;
-      e.kb = Math.max(0, e.kb - dt * 4.5);
+      const vl = Math.hypot(vx, vz);
+      if (vl > 0.0001) {
+        const wob = Math.sin(G.t * 2.4 + e.wob) * 0.10;
+        const cs = Math.cos(wob), sn = Math.sin(wob);
+        const nvx = (vx * cs - vz * sn) / vl, nvz = (vx * sn + vz * cs) / vl;
+        e.x += nvx * e.spd * dt; e.z += nvz * e.spd * dt;
+        e.walk += dt * (2.5 + e.spd * 1.6);
+      }
+      if (e.kb > 0) {
+        e.x += e.kbx * e.kb * 9 * dt; e.z += e.kbz * e.kb * 9 * dt;
+        e.kb = Math.max(0, e.kb - dt * 4.5);
+      }
     }
     const ed = Math.hypot(e.x, e.z);
     if (ed > ARENA - .5) { const k = (ARENA - .5) / ed; e.x *= k; e.z *= k; }
 
-    // Angriff
+    // Angriff — in der Luft (Bosssprung) schlägt niemand zu
     e.atk -= dt;
-    if (d < e.r + 0.72 && e.atk <= 0) {
-      e.atk = 0.72;
+    if (d < e.r + 0.72 && e.atk <= 0 && !(e.y > 0.2)) {
+      // Bosse schlagen seltener zu als die Horde: ihr Schaden je Treffer ist
+      // ein Vielfaches, im alten Takt hätte ein Streifschuss sofort getötet
+      e.atk = e.T.boss ? 1.15 : 0.72;
       hurtPlayer(e.dmg);
       if (e.T.explode) { killEnemy(e); }
     }
@@ -1655,6 +1839,20 @@ function update(dt) {
       }
     }
     for (const e of G.enemies) if (e.orbCd > 0) e.orbCd -= dt;
+  }
+
+  /* --- Druckwellen --- */
+  for (let i = G.wellen.length - 1; i >= 0; i--) {
+    const w = G.wellen[i];
+    const vor = w.r;
+    w.r += w.rMax * 2.2 * dt;          // in gut einer halben Sekunde ganz außen
+    if (!w.getroffen) {
+      // Getroffen wird, wen die Front überstreicht. Wer beim Auslösen schon
+      // weiter draußen steht als die Endgröße, bleibt verschont.
+      const wd = Math.hypot(p.x - w.x, p.z - w.z);
+      if (wd <= w.r && wd >= vor - 1.3) { w.getroffen = true; hurtPlayer(w.dmg); }
+    }
+    if (w.r >= w.rMax) G.wellen.splice(i, 1);
   }
 
   /* --- Fundstücke --- */
@@ -1872,7 +2070,13 @@ function drawZombie(e) {
   _zr[0] = col[0] * .55 * ev; _zr[1] = col[1] * .55; _zr[2] = col[2] * .62 * ev;
   _zp[0] = col[0] * .35 + .04; _zp[1] = col[1] * .33 + .04; _zp[2] = col[2] * .40 + .05;
   const o = _zo;
+  // y ist fast immer 0 — nur der springende Boss hebt ab. Der Scratch-Wert
+  // muss trotzdem jedes Mal gesetzt werden, sonst schweben alle anderen mit.
   o.x = e.x; o.z = e.z; o.face = e.face; o.walk = e.walk; o.sc = s; o.flash = f;
+  o.y = e.y || 0;
+  // Beim Sammeln duckt sich der Boss tief — die Haltung ist die Ankündigung,
+  // die man auch dann noch sieht, wenn der Ring unter Leichen liegt
+  o.hunch = (T.boss && (e.bs === 'sammeln' || e.bs === 'erholung')) ? .62 : .28;
   const g = drawHuman(o);
   if (T.boss) {
     // Hörner + Schulterpanzer
@@ -1880,6 +2084,7 @@ function drawZombie(e) {
     limb(e.x, e.z, g.base, e.face, -0.26 * s, g.hy + 0.24 * s, 0, -0.5, -0.4, 0.13 * s, 0.5 * s, 0.13 * s, bone, true);
     limb(e.x, e.z, g.base, e.face, 0.26 * s, g.hy + 0.24 * s, 0, -0.5, 0.4, 0.13 * s, 0.5 * s, 0.13 * s, bone, true);
     limb(e.x, e.z, g.base, e.face, 0, 1.42 * s, 0, 0, 0, 1.02 * s, 0.22 * s, 0.5 * s, tintInto(_ac, BPLATE, f), false);
+    if (e.bs === 'sammeln') zeigeAnkuendigung(e);
   }
   if (e.elite) {
     push(batches.gSph, e.x, 1.0 * s, e.z, 1.5 * s, 1.9 * s, 1.5 * s, 0, 0, 0, .85, .3, 1, .13);
@@ -1899,6 +2104,38 @@ function drawZombie(e) {
   push(batches.gBox, exx + px_, ey, ezz + pz_, .07 * s, .06 * s, .05 * s, 0, ef, 0, 1, .25, .12, 1);
   push(batches.gBox, exx - px_, ey, ezz - pz_, .07 * s, .06 * s, .05 * s, 0, ef, 0, 1, .25, .12, 1);
   addShadow(e.x, e.z, 1.45 * s, 0.4);
+}
+
+/* Leuchtender Ring aus kleinen Würfeln — für Ankündigungen und Druckwellen.
+   Ein echter Torus wäre eine eigene Geometrie; das hier läuft im vorhandenen
+   Glüh-Batch mit und kostet nichts weiter. */
+function ringPunkte(x, z, r, col, a, y, gr) {
+  const s = gr || .24;
+  const n = clamp(Math.round(r * 4.5), 12, 44);
+  for (let i = 0; i < n; i++) {
+    const w = i / n * TAU;
+    push(batches.gBox, x + Math.sin(w) * r, y, z + Math.cos(w) * r,
+      s, s, s, 0, w, 0, col[0], col[1], col[2], a);
+  }
+}
+/* Was der Boss gleich tut, muss man vorher sehen. Sprung und Welle zeigen den
+   getroffenen Bereich, Ruf und Salve nur ein Pulsen um den Boss. */
+function zeigeAnkuendigung(e) {
+  const f = 1 - clamp(e.bt / B_ANKUENDIGUNG, 0, 1);
+  const puls = .45 + .45 * Math.abs(Math.sin(f * 10));
+  const col = e.plan === 'ruf' ? [1, .82, .28]
+            : e.plan === 'salve' ? [.62, 1, .86]
+            : [1, .30, .22];
+  if (e.plan === 'sprung') {
+    // Landemarke: sie steht fest, sobald die Ankündigung beginnt
+    push(batches.decal, e.zx, 0.03, e.zz, e.wr * f, 1, e.wr * f, 0, 0, 0, col[0], col[1], col[2], .26);
+    ringPunkte(e.zx, e.zz, e.wr, col, puls, .3);
+  } else if (e.plan === 'welle') {
+    push(batches.decal, e.x, 0.03, e.z, e.wr * f, 1, e.wr * f, 0, 0, 0, col[0], col[1], col[2], .24);
+    ringPunkte(e.x, e.z, e.wr, col, puls, .3);
+  } else {
+    ringPunkte(e.x, e.z, 2.2 + f * 1.4, col, puls, .8 * e.sc);
+  }
 }
 
 function drawProps() {
@@ -1932,6 +2169,12 @@ function drawWorld() {
   for (const d of G.decals) {
     const a = clamp(d.l / d.ml, 0, 1) * 0.45;
     push(batches.decal, d.x, 0.012, d.z, d.r, 1, d.r, 0, 0, 0, d.c[0], d.c[1], d.c[2], a);
+  }
+  // Druckwellen unter allem anderen, damit die Front lesbar bleibt
+  for (const w of G.wellen) {
+    const f = clamp(w.r / w.rMax, 0, 1);
+    push(batches.decal, w.x, 0.03, w.z, w.r, 1, w.r, 0, 0, 0, w.col[0], w.col[1], w.col[2], .30 - f * .16);
+    ringPunkte(w.x, w.z, w.r, w.col, .95 - f * .35, .45, .40);
   }
   drawProps();
   for (const e of G.enemies) drawZombie(e);
@@ -2162,15 +2405,47 @@ const HSKEY = 'aminoglu_zombie_hs_v1';
 const TOPN = 5;
 
 /* ---------------------- Online-Bestenliste (optional) --------------------
-   Leer lassen = alles bleibt rein lokal, im Menü taucht nichts davon auf.
-   Zum Einschalten die Adresse des eigenen Servers und einen Raumcode
-   eintragen; nur wer denselben Code hat, sieht dieselbe Liste.
-   Eine fertige Server-Fassung liegt unter server/ im Projekt.            */
+   Nur wer denselben Server und denselben Raumcode nutzt, sieht dieselbe
+   Liste. Eine fertige Server-Fassung liegt unter server/ im Projekt.
+
+   Beides lässt sich hier fest eintragen — muss es aber nicht: Im Menü unter
+   „Bestenliste → Freunde" kann man es auch direkt eingeben, und ein geteilter
+   Einladungslink trägt es von selbst ein. Auf dem Handy ist das der einzig
+   gangbare Weg; die Datei zu bearbeiten scheidet dort aus.               */
 const ONLINE = {
   url: '',      // z. B. 'https://aminoglu-scores.dein-name.workers.dev'
   raum: '',     // z. B. 'baran-clan'
 };
+const ONLINE_KEY = 'aminoglu_zombie_online_v1';
 const online = () => !!(ONLINE.url && ONLINE.raum);
+const normRaum = v => String(v == null ? '' : v).trim().toLowerCase();
+// Dieselbe Regel wie im Server, damit nichts eingetragen wird, was er ablehnt
+const raumOk = v => /^[a-z0-9][a-z0-9-]{2,31}$/.test(v);
+function urlOk(v) {
+  try { const u = new URL(String(v).trim()); return u.protocol === 'https:' || u.protocol === 'http:'; }
+  catch (e) { return false; }
+}
+function sichereOnlineWahl(url, raum) {
+  ONLINE.url = String(url).trim(); ONLINE.raum = raum;
+  try { localStorage.setItem(ONLINE_KEY, JSON.stringify({ url: ONLINE.url, raum })); } catch (e) { }
+}
+/* Ein Einladungslink (…#raum=code&server=adresse) hat Vorrang vor dem
+   Gespeicherten und wird gleich übernommen: einmal antippen genügt, um dem
+   Raum eines Freundes beizutreten. */
+function ladeOnlineWahl() {
+  const p = new URLSearchParams(String(location.hash || '').replace(/^#/, ''));
+  const lRaum = normRaum(p.get('raum')), lUrl = String(p.get('server') || '').trim();
+  if (raumOk(lRaum) && urlOk(lUrl)) { sichereOnlineWahl(lUrl, lRaum); return; }
+  let q = null;
+  try { q = JSON.parse(localStorage.getItem(ONLINE_KEY) || 'null'); } catch (e) { }
+  if (q && urlOk(q.url) && raumOk(normRaum(q.raum))) { ONLINE.url = String(q.url).trim(); ONLINE.raum = normRaum(q.raum); }
+}
+function einladungsLink() {
+  const u = new URL(location.href);
+  u.hash = 'raum=' + encodeURIComponent(ONLINE.raum) + '&server=' + encodeURIComponent(ONLINE.url);
+  return u.toString();
+}
+ladeOnlineWahl();
 // Vom Server kommender Text wird als HTML eingesetzt, deshalb hier entschärfen
 function escHtml(v) {
   return String(v == null ? '' : v).replace(/[&<>"']/g, c =>
@@ -2302,7 +2577,7 @@ function startGame() {
   G.t = 0; G.kills = 0; G.wave = 1; G.spawnAcc = 0; G.nextBoss = BOSS_INTERVALL; G.bossCount = 0; G.boss = null; G.lvlQueue = 0;
   G.enemies.length = 0; G.bullets.length = 0; G.ebullets.length = 0; G.orbs.length = 0;
   G.parts.length = 0; G.decals.length = 0; G.pops.length = 0;
-  G.pickups.length = 0; G.nextBomb = BOMB_INTERVALL; G.nextHeart = rnd(20, 34);
+  G.pickups.length = 0; G.wellen.length = 0; G.nextBomb = BOMB_INTERVALL; G.nextHeart = rnd(20, 34);
   G.endbossDa = false; G.gewonnen = false;
   G.shake = 0; G.flash = 0; G.camX = 0; G.camZ = 0;
   for (const k in _hud) delete _hud[k];
@@ -2366,11 +2641,26 @@ $('btnQuit').onclick = () => { gameOver(); };
 $('btnStart').onclick = () => { initAudio(); resumeAudio(); buildCards(); G.state = 'select'; show('selScreen'); };
 $('btnBack').onclick = () => { G.state = 'title'; show('titleScreen'); refreshBest(); };
 let scoreTab = 'lokal';
+let setupOffen = false;      // Eingabefelder sichtbar, obwohl schon verbunden
 function zeigeScores() {
-  $('scoreTabs').classList.toggle('hidden', !online());
   document.querySelectorAll('#scoreTabs .tab').forEach(b => b.classList.toggle('on', b.dataset.tab === scoreTab));
-  $('scoreSub').textContent = scoreTab === 'online' ? t('scoresSubOnline')(ONLINE.raum) : t('scoresSub');
-  if (scoreTab === 'lokal' || !online()) { renderScores('scoreList'); return; }
+  const freunde = scoreTab === 'online';
+  // Ohne Server-Angaben zeigt der Reiter die Einrichtung statt einer leeren
+  // Liste — vorher war er einfach unsichtbar, und niemand fand das Feature
+  const einrichten = freunde && (!online() || setupOffen);
+  $('setupErklaer').innerHTML = t('setupErklaer');
+  $('freundeSetup').classList.toggle('hidden', !einrichten);
+  $('raumZeile').classList.toggle('hidden', !(freunde && online() && !setupOffen));
+  $('scoreList').classList.toggle('hidden', einrichten);
+  $('scoreSub').textContent = freunde
+    ? (online() ? t('scoresSubOnline')(ONLINE.raum) : t('tabOnline'))
+    : t('scoresSub');
+  if (einrichten) {
+    $('inpServer').value = ONLINE.url; $('inpRaum').value = ONLINE.raum;
+    $('setupFehler').textContent = '';
+    return;
+  }
+  if (!freunde) { renderScores('scoreList'); return; }
   $('scoreList').innerHTML = `<div class="hsempty">${t('laedt')}</div>`;
   holeOnline().then(r => {
     if (scoreTab !== 'online') return;                      // inzwischen umgeschaltet
@@ -2379,8 +2669,32 @@ function zeigeScores() {
   });
 }
 document.querySelectorAll('#scoreTabs .tab').forEach(b => {
-  b.onclick = () => { scoreTab = b.dataset.tab; zeigeScores(); buzz(8); };
+  b.onclick = () => { scoreTab = b.dataset.tab; setupOffen = false; zeigeScores(); buzz(8); };
 });
+$('btnSetupSave').onclick = () => {
+  const url = $('inpServer').value.trim(), raum = normRaum($('inpRaum').value);
+  if (!urlOk(url)) { $('setupFehler').textContent = t('setupUrlFehler'); buzz(24); return; }
+  if (!raumOk(raum)) { $('setupFehler').textContent = t('setupRaumFehler'); buzz(24); return; }
+  sichereOnlineWahl(url, raum);
+  setupOffen = false;
+  buzz(12); zeigeScores();
+};
+$('btnRaumAendern').onclick = () => { setupOffen = true; zeigeScores(); buzz(8); };
+$('btnTeilen').onclick = async () => {
+  const link = einladungsLink();
+  try {
+    if (navigator.share) { await navigator.share({ title: 'Amınoğlu-Zombie', url: link }); return; }
+    await navigator.clipboard.writeText(link);
+    // Kein toast(): der verblasst nur im laufenden Spiel, im Menü bliebe er
+    // stehen. Die Rückmeldung sitzt deshalb kurz auf der Schaltfläche selbst.
+    const b = $('btnTeilen');
+    b.textContent = t('teilenKopiert');
+    setTimeout(() => { b.textContent = t('teilen'); }, 1800);
+  } catch (e) {
+    // Weder Teilen noch Zwischenablage: dann wenigstens zum Abschreiben zeigen
+    setupOffen = true; zeigeScores(); $('inpServer').value = link;
+  }
+};
 $('btnScores').onclick = () => { G.state = 'scores'; show('scoreScreen'); zeigeScores(); };
 $('btnScoresBack').onclick = () => { G.state = 'title'; show('titleScreen'); refreshBest(); };
 $('btnGo').onclick = () => startGame();

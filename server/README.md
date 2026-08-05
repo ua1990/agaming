@@ -40,19 +40,38 @@ Wrangler nennt am Ende die Adresse, etwa
 
 ## Im Spiel eintragen
 
-In `index.html` oben im Abschnitt `ONLINE` beides eintragen:
+Das geht direkt im Menü, ohne die Datei anzufassen — auf dem Handy ist das der
+einzig gangbare Weg:
+
+**Bestenliste → Reiter „Freunde" → Serveradresse und Raumcode → Verbinden.**
+
+* Serveradresse: die Adresse, die Wrangler ausgegeben hat
+* Raumcode: frei gewählt, 3 bis 32 Zeichen aus `a-z`, `0-9` und Bindestrich
+
+Beides bleibt auf dem Gerät gespeichert. Über **Einladung teilen** entsteht ein
+Link der Form
+
+```
+…/index.html#raum=baran-clan&server=https%3A%2F%2F…workers.dev
+```
+
+Wer ihn antippt, ist im selben Raum — nichts abzutippen. Ein Link mit
+unbrauchbaren Werten wird stillschweigend ignoriert.
+
+Wer das Spiel selbst ausliefert, kann beides auch fest vorbelegen; dann ist es
+für alle gleich eingestellt, die diese Datei öffnen:
 
 ```js
 const ONLINE = {
   url:  'https://aminoglu-scores.dein-name.workers.dev',
-  raum: 'baran-clan',        // 3 bis 32 Zeichen: a-z, 0-9, Bindestrich
+  raum: 'baran-clan',
 };
 ```
 
-Bleibt eines der beiden leer, verhält sich das Spiel wie vorher: kein
-Umschalter im Menü, keine Netzaufrufe.
+Ohne Einrichtung verhält sich das Spiel wie vorher: keine Netzaufrufe, der
+Reiter „Freunde" zeigt statt einer Liste die Einrichtung.
 
-Alle, die dieselben zwei Werte eintragen, sehen dieselbe Liste. Einträge werden
+Alle, die dieselben zwei Werte nutzen, sehen dieselbe Liste. Einträge werden
 nicht mit Spielernamen versehen, sondern zeigen **Charakter und Waffe** — wer
 mit Ahmet und der Schrotflinte stirbt, erscheint als „Ahmet · Schrotflinte".
 Es gibt also nichts einzugeben und nichts zu verwalten.
