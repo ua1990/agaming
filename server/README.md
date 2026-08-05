@@ -52,9 +52,10 @@ const ONLINE = {
 Bleibt eines der beiden leer, verhält sich das Spiel wie vorher: kein
 Umschalter im Menü, keine Netzaufrufe.
 
-Alle, die dieselben zwei Werte eintragen, sehen dieselbe Liste. Beim ersten
-Eintrag fragt das Spiel nach einem Namen und merkt ihn sich lokal; ändern lässt
-er sich über den Knopf in der Bestenliste.
+Alle, die dieselben zwei Werte eintragen, sehen dieselbe Liste. Einträge werden
+nicht mit Spielernamen versehen, sondern zeigen **Charakter und Waffe** — wer
+mit Ahmet und der Schrotflinte stirbt, erscheint als „Ahmet · Schrotflinte".
+Es gibt also nichts einzugeben und nichts zu verwalten.
 
 ## Kosten
 
@@ -73,8 +74,10 @@ nur, wenn die Spiellogik selbst auf dem Server liefe — ein völlig anderer Bau
 Für eine Liste unter Freunden ist das in Ordnung; als öffentliche Rangliste
 taugt es nicht.
 
-Es gibt außerdem keine Anmeldung und keine Löschfunktion. Wer eine Liste leeren
-will, löscht den Schlüssel im Speicher:
+Es gibt keine Anmeldung, keine Spielernamen und keine Löschfunktion. Weil
+Einträge nur Charakter und Waffe nennen, sind Läufe verschiedener Leute mit
+demselben Charakter nicht auseinanderzuhalten. Wer eine Liste leeren will,
+löscht den Schlüssel im Speicher:
 
 ```bash
 npx wrangler kv key delete --binding=SCORES "raum:baran-clan"
