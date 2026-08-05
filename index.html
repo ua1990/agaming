@@ -964,7 +964,7 @@ const ETYPES = {
   spitter: { hp: 26, spd: 1.95, dmg: 8, xp: 6, r: .55, sc: 1.02, col: [.24, .52, .45], from: 130, w: 20, ranged: true },
   bomber: { hp: 34, spd: 3.05, dmg: 10, xp: 6, r: .58, sc: 1.06, col: [.62, .30, .16], from: 175, w: 20, explode: true },
   boss: { hp: 430, spd: 2.05, dmg: 34, xp: 80, r: 1.7, sc: 3.0, col: [.46, .13, .16], from: 9999, w: 0, boss: true },
-  endboss: { hp: 2600, spd: 2.25, dmg: 48, xp: 400, r: 2.3, sc: 4.2, col: [.30, .06, .30], from: 9999, w: 0, boss: true, ende: true },
+  endboss: { hp: 3000, spd: 2.25, dmg: 48, xp: 400, r: 2.3, sc: 4.2, col: [.30, .06, .30], from: 9999, w: 0, boss: true, ende: true },
 };
 const BOSS_NAMES = [
   { de: 'Der Große Amınoğlu', tr: 'Büyük Amınoğlu' },
@@ -986,7 +986,7 @@ const G = {
   p: null,
   enemies: [], bullets: [], ebullets: [], orbs: [], parts: [], decals: [], props: [], pops: [],
   pickups: [], nextBomb: 0, nextHeart: 0, endbossDa: false, gewonnen: false,
-  spawnAcc: 0, nextBoss: 100, boss: null, bossCount: 0, lvlQueue: 0,
+  spawnAcc: 0, nextBoss: 180, boss: null, bossCount: 0, lvlQueue: 0,
   shake: 0, camX: 0, camZ: 0, flash: 0,
 };
 
@@ -1049,6 +1049,8 @@ function buildProps() {
 const MAX_PICKUPS = 3;
 // Die Bombe kommt in festem Takt, damit man sie einplanen kann
 const BOMB_INTERVALL = 120;
+// Zwischenbosse kommen in festem Takt, damit man sie einplanen kann
+const BOSS_INTERVALL = 180;   // 3 Minuten
 /* Sucht einen freien Platz in Sichtweite, aber nicht direkt vor den Füßen —
    man soll hingehen müssen, statt es nebenbei aufzusammeln. */
 function spawnPickup(kind) {
@@ -1132,7 +1134,7 @@ function spawnEnemy(type, forceR) {
     e.nameKey = T.ende ? { de: 'DER LETZTE AMINOĞLU', tr: 'SON AMINOĞLU' }
                        : BOSS_NAMES[Math.min(BOSS_NAMES.length - 1, (G.wave / 4) | 0)];
     e.hp = e.maxHp = T.ende ? T.hp * Math.pow(d, 1.15)
-                            : T.hp * Math.pow(d, 1.22) * (1 + G.bossCount * 0.7);
+                            : T.hp * Math.pow(d, 1.22) * (1 + G.bossCount * 0.9);
     G.boss = e;
     sfx('boss'); buzz([40, 60, 90]);
     toast(t('tBoss'), '#ff6a6a');
@@ -1509,7 +1511,7 @@ function update(dt) {
     toast(t('tEndboss'), '#e07aff');
   }
   // Nachschub und Zwischenbosse ruhen, sobald der Endgegner steht
-  if (!G.endbossDa && G.t >= G.nextBoss) { G.nextBoss += 105; spawnEnemy('boss', 24); }
+  if (!G.endbossDa && G.t >= G.nextBoss) { G.nextBoss += BOSS_INTERVALL; spawnEnemy('boss', 24); }
   // Fundstücke tauchen in unregelmäßigen Abständen auf
   if (G.t >= G.nextBomb) { G.nextBomb = G.t + BOMB_INTERVALL; spawnPickup('bomb'); }
   if (G.t >= G.nextHeart) { G.nextHeart = G.t + rnd(24, 40); spawnPickup('heart'); }
@@ -2297,7 +2299,7 @@ function startGame() {
   initAudio();
   resumeAudio();
   G.p = mkPlayer(G.char, G.wp);
-  G.t = 0; G.kills = 0; G.wave = 1; G.spawnAcc = 0; G.nextBoss = 100; G.bossCount = 0; G.boss = null; G.lvlQueue = 0;
+  G.t = 0; G.kills = 0; G.wave = 1; G.spawnAcc = 0; G.nextBoss = BOSS_INTERVALL; G.bossCount = 0; G.boss = null; G.lvlQueue = 0;
   G.enemies.length = 0; G.bullets.length = 0; G.ebullets.length = 0; G.orbs.length = 0;
   G.parts.length = 0; G.decals.length = 0; G.pops.length = 0;
   G.pickups.length = 0; G.nextBomb = BOMB_INTERVALL; G.nextHeart = rnd(20, 34);

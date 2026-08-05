@@ -44,8 +44,10 @@ Horde immer stärker wird.
   zweiten Hälfte zu ihm herunter.
 * **Gegner:** Walker, Runner, Brute, Spitter und Bomber — Leben, Tempo und
   Schaden skalieren mit der Überlebenszeit, der Zuwachs zieht später an. Alle
-  ~105 Sekunden kommt ein Boss. Ab fünf Minuten wird ein wachsender Teil der
-  Horde zu **Elitegegnern**: mehr als doppelt so zäh, kräftiger eingefärbt.
+  **alle 3 Minuten** kommt ein Boss, und jeder ist rund doppelt so stark wie der
+  vorige (2.700 → 10.000 → 23.000 → 43.000 Leben). Ab fünf Minuten wird ein
+  wachsender Teil der Horde zu **Elitegegnern**: mehr als doppelt so zäh,
+  kräftiger eingefärbt.
 * **Highscore:** `Überlebenszeit × 5 + Kills × 10`. Die **fünf besten Läufe** stehen
   in einer Bestenliste, erreichbar über das Titelmenü und direkt nach dem Tod, dort
   mit dem gerade gespielten Lauf hervorgehoben. Jeder Eintrag nennt Charakter,
