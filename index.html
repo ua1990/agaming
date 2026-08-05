@@ -261,7 +261,8 @@ const STR = {
     tagline: 'Zombie Survival', start: 'SPIEL STARTEN', fullscreen: 'Vollbild',
     sndOn: '🔊 Ton', sndOff: '🔇 Stumm',
     hint: 'Bewege dich mit dem linken Daumen ·<br>Geschossen wird automatisch in Laufrichtung.',
-    record: (s, t, k) => `🏆 Rekord: <b>${s}</b> Punkte · ${t} · ${k} Kills`,
+    record: (s, h, t, k) => `🏆 Rekord: <b>${s}</b> Punkte<br>${h} · ${t} · ${k} Kills`,
+    heldWith: (c, w) => c + ' mit ' + w,
     chooseFighter: 'Wähle deinen Kämpfer', chooseWeapon: 'Und jetzt die Waffe',
     stRange: 'Weite', scopeTag: '🎯 ZIELFERNROHR · 54°', signature: n => 'Tritt sonst an mit: ' + n, signatureTag: '★ STAMMWAFFE', back: 'Zurück', go: "LOS GEHT'S",
     tip: 'Du schießt, wohin du läufst — halte die Horde vor dir.',
@@ -283,7 +284,8 @@ const STR = {
     tagline: 'Zombie Survival', start: 'OYUNU BAŞLAT', fullscreen: 'Tam Ekran',
     sndOn: '🔊 Ses', sndOff: '🔇 Sessiz',
     hint: 'Sol başparmağınla hareket et ·<br>Ateş otomatik, koştuğun yöne.',
-    record: (s, t, k) => `🏆 Rekor: <b>${s}</b> puan · ${t} · ${k} öldürme`,
+    record: (s, h, t, k) => `🏆 Rekor: <b>${s}</b> puan<br>${h} · ${t} · ${k} öldürme`,
+    heldWith: (c, w) => c + ', ' + w + ' ile',
     chooseFighter: 'Savaşçını Seç', chooseWeapon: 'Şimdi de silah',
     stRange: 'Menzil', scopeTag: '🎯 DÜRBÜN · 54°', signature: n => 'Normalde şununla çıkar: ' + n, signatureTag: '★ ASIL SİLAHI', back: 'Geri', go: 'HADİ BAŞLAYALIM',
     tip: 'Koştuğun yöne ateş edersin — sürüyü hep önünde tut.',
@@ -2109,7 +2111,10 @@ $('btnSound').onclick = () => {
 
 function refreshBest() {
   const hs = loadHS();
-  $('bestLine').innerHTML = hs.best ? t('record')(hs.best.score, fmtTime(hs.best.time), hs.best.kills) : '';
+  const b = hs.best;
+  // Ältere Rekorde kennen die Waffe noch nicht, dann nur der Name
+  const halter = b ? (b.wp ? t('heldWith')(b.char, tx(weaponById(b.wp).nm)) : b.char) : '';
+  $('bestLine').innerHTML = b ? t('record')(b.score, halter, fmtTime(b.time), b.kills) : '';
 }
 
 document.addEventListener('visibilitychange', () => {
