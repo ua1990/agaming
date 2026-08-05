@@ -644,12 +644,33 @@ function loadSamples() {
     } catch (e) { }
   }
 }
+// Läuft dieselbe Aufnahme noch, wird die alte kurz ausgeblendet und ersetzt.
+// Zwei versetzte Kopien derselben Aufnahme klingen wie ein Stottern.
+const activeSrc = {};
 function playSample(k, vol) {
   const buf = sampleBuf[k];
   if (!buf || !AC || AC.state !== 'running') return false;
+  const now = AC.currentTime;
+  const prev = activeSrc[k];
+  if (prev) {
+    try {
+      prev.g.gain.cancelScheduledValues(now);
+      prev.g.gain.setValueAtTime(prev.g.gain.value, now);
+      prev.g.gain.linearRampToValueAtTime(0, now + 0.02);   // ohne Rampe knackt es
+      prev.s.stop(now + 0.03);
+    } catch (e) { }
+    activeSrc[k] = null;
+  }
   const s = AC.createBufferSource(); s.buffer = buf;
   const g = AC.createGain(); g.gain.value = vol === undefined ? 1 : vol;
   s.connect(g); g.connect(master); s.start();
+  const rec = { s, g };
+  activeSrc[k] = rec;
+  sampleUntil = performance.now() + buf.duration * 1000;
+  // Eine schon laufende Vibration abbrechen — beim Sterben löst der Treffer
+  // unmittelbar vorher aus und würde in den Klang hineinrattern.
+  try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) { }
+  s.onended = () => { if (activeSrc[k] === rec) activeSrc[k] = null; };
   return true;
 }
 
@@ -732,12 +753,14 @@ function sfx(type, vol = 1) {
     }
   } catch (e) { }
 }
-// Gedrosselt: bei Kettenexplosionen würde das Handy sonst durchgehend brummen
-let lastBuzz = -1;
+// Gedrosselt: bei Kettenexplosionen würde das Handy sonst durchgehend brummen.
+// Zusätzlich ruht die Vibration, solange eine eigene Aufnahme läuft — der
+// Vibrationsmotor sitzt neben dem Lautsprecher und rattert hörbar in den Klang.
+let lastBuzz = -1, sampleUntil = -1;
 function buzz(ms) {
   if (!navigator.vibrate) return;
   const n = performance.now();
-  if (n - lastBuzz < 90) return;
+  if (n < sampleUntil || n - lastBuzz < 90) return;
   lastBuzz = n;
   try { navigator.vibrate(ms); } catch (e) { }
 }
@@ -1087,7 +1110,13 @@ function gainXp(n) {
     p.xp -= p.xpNext; p.lvl++; gained++;
     p.xpNext = Math.round(3 + p.lvl * 2.2 + Math.pow(p.lvl, 1.35));
   }
-  if (gained) { G.lvlQueue += gained; openLevelUp(); }
+  if (gained) {
+    G.lvlQueue += gained;
+    // Einmal pro Aufstiegs-Schwung, nicht pro Karte: bei mehreren Stufen auf
+    // einmal klickt man schneller durch, als die Aufnahme lang ist.
+    sfx('level');
+    openLevelUp();
+  }
 }
 function openLevelUp() {
   const p = G.p;
@@ -1098,7 +1127,7 @@ function openLevelUp() {
   for (let i = 0; i < 3 && pool.length; i++) chosen.push(pool.splice((Math.random() * pool.length) | 0, 1)[0]);
   if (!chosen.length) { G.lvlQueue = 0; return; }
   G.state = 'levelup';
-  sfx('level'); buzz(20);
+  buzz(20);
   const box = $('ups'); box.innerHTML = '';
   chosen.forEach(u => {
     const lv = (p.upTaken[u.id] || 0);
@@ -1440,7 +1469,9 @@ function hurtPlayer(dmg) {
   const real = dmg * (1 - p.armor);
   p.hp -= real; p.inv = 0.42; p.hitFlash = 1;
   G.shake = Math.min(1.5, G.shake + .55); G.flash = 1;
-  sfx('hurt'); buzz(p.hp < p.maxHp * .3 ? [24, 30, 24] : 18);
+  // Beim tödlichen Treffer keine eigene Rückmeldung: Klang und Vibration
+  // liefen sonst in den Sterbe-Klang hinein, der gleich danach startet.
+  if (p.hp > 0) { sfx('hurt'); buzz(p.hp < p.maxHp * .3 ? [24, 30, 24] : 18); }
 }
 
 /* --------------------------------- Render -------------------------------- */
