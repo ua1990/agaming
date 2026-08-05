@@ -269,7 +269,7 @@ const vDiv = ENGINE_OK ? (isGL2 ? (i, d) => gl.vertexAttribDivisor(i, d) : (i, d
 const dInst = ENGINE_OK ? (isGL2 ? (m, c, t, o, n) => gl.drawElementsInstanced(m, c, t, o, n)
                                  : (m, c, t, o, n) => instExt.drawElementsInstancedANGLE(m, c, t, o, n)) : () => {};
 
-const FOG_COL = [0.043, 0.055, 0.078];
+const FOG_COL = [0.075, 0.088, 0.115];
 
 function sh(type, src) {
   const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
@@ -318,7 +318,7 @@ void main(){
   float diff = max(dot(n, uLight), 0.0);
   float sky  = max(n.y, 0.0);
   float back = max(dot(n, vec3(-uLight.x, 0.15, -uLight.z)), 0.0);
-  vec3 lit = iCol.rgb * (0.30 + 0.72*diff + 0.20*sky) + vec3(0.10,0.13,0.22)*back*0.55;
+  vec3 lit = iCol.rgb * (0.50 + 0.68*diff + 0.26*sky) + vec3(0.11,0.14,0.23)*back*0.65;
   vec3 col = mix(lit, iCol.rgb, uUnlit);
   float d = distance(world, uCam);
   float fog = clamp((d - uFogNear) / (uFogFar - uFogNear), 0.0, 1.0);
@@ -354,19 +354,19 @@ void main(){
                      / (uFogRange.y - uFogRange.x), 0.0, 1.0);
   // Betonplatten mit zufälliger Tönung
   vec2 cell = floor(vXZ * 0.25);
-  vec3 base = mix(vec3(0.086,0.093,0.110), vec3(0.126,0.132,0.152), h(cell));
-  base = mix(base, vec3(0.118,0.100,0.080), h(cell * 0.31 + 7.7) * 0.5);
+  vec3 base = mix(vec3(0.150,0.160,0.186), vec3(0.212,0.222,0.252), h(cell));
+  base = mix(base, vec3(0.198,0.172,0.140), h(cell * 0.31 + 7.7) * 0.5);
   // Fugen
   vec2 g = abs(fract(vXZ * 0.25) - 0.5);
   float line = smoothstep(0.44, 0.5, max(g.x, g.y));
-  base = mix(base, vec3(0.046,0.050,0.062), line * 0.85);
+  base = mix(base, vec3(0.085,0.092,0.110), line * 0.85);
   // dezente Fahrbahnmarkierungen
   vec2 g2 = abs(fract(vXZ * 0.0625 + 0.5) - 0.5);
   float big = smoothstep(0.487, 0.5, max(g2.x, g2.y));
-  base = mix(base, vec3(0.15,0.25,0.27), big * 0.40);
+  base = mix(base, vec3(0.20,0.32,0.35), big * 0.40);
   // Lichtkegel um den Spieler
   float pd = distance(vXZ, uPly);
-  base *= 1.0 + 0.62 * exp(-pd * pd * 0.0060);
+  base *= 1.0 + 0.55 * exp(-pd * pd * 0.0060);
   // Todeszone am Arenarand
   float d = length(vXZ);
   float pulse = 0.55 + 0.45 * sin(uT * 2.2 - d * 0.5);
@@ -451,8 +451,14 @@ function geoDisc(seg) {
 }
 
 const FPI = 13;                 // floats pro Instanz
-const MAXI = 9000;
-function Batch(geo) { return { geo, data: new Float32Array(MAXI * FPI), n: 0, buf: gl.createBuffer() }; }
+const MAXI = 5000;
+function Batch(geo) {
+  const b = { geo, data: new Float32Array(MAXI * FPI), n: 0, buf: gl.createBuffer() };
+  // Speicher einmal reservieren, danach nur noch überschreiben
+  gl.bindBuffer(gl.ARRAY_BUFFER, b.buf);
+  gl.bufferData(gl.ARRAY_BUFFER, b.data.byteLength, gl.DYNAMIC_DRAW);
+  return b;
+}
 function push(b, x, y, z, sx, sy, sz, rx, ry, rz, r, g, bl, a) {
   if (b.n >= MAXI) return;
   const d = b.data, o = b.n * FPI;
@@ -468,7 +474,8 @@ function drawBatch(b) {
   gl.enableVertexAttribArray(A.aPos); gl.vertexAttribPointer(A.aPos, 3, gl.FLOAT, false, 24, 0); vDiv(A.aPos, 0);
   gl.enableVertexAttribArray(A.aNor); gl.vertexAttribPointer(A.aNor, 3, gl.FLOAT, false, 24, 12); vDiv(A.aNor, 0);
   gl.bindBuffer(gl.ARRAY_BUFFER, b.buf);
-  gl.bufferData(gl.ARRAY_BUFFER, b.data.subarray(0, b.n * FPI), gl.DYNAMIC_DRAW);
+  // bufferSubData statt bufferData: kein Neuanlegen des Speichers pro Bild
+  gl.bufferSubData(gl.ARRAY_BUFFER, 0, b.data.subarray(0, b.n * FPI));
   const S = FPI * 4;
   gl.enableVertexAttribArray(A.iOff); gl.vertexAttribPointer(A.iOff, 3, gl.FLOAT, false, S, 0);  vDiv(A.iOff, 1);
   gl.enableVertexAttribArray(A.iScl); gl.vertexAttribPointer(A.iScl, 3, gl.FLOAT, false, S, 12); vDiv(A.iScl, 1);
@@ -893,6 +900,8 @@ function killEnemy(e) {
   addDecal(e.x, e.z, (0.9 + e.sc * 0.6), [.16, .04, .05], 18);
   sfx('hit', .7);
   if (e.T.explode) explode(e.x, e.z, 3.2, e.dmg * 1.4, [.9, .45, .15]);
+  // Nicht eingesammelte Kristalle nicht unbegrenzt auflaufen lassen
+  if (G.orbs.length > 240) G.orbs.splice(0, G.orbs.length - 240);
   const n = e.T.boss ? 14 : (e.T.xp > 3 ? 3 : 1);
   for (let i = 0; i < n; i++)
     G.orbs.push({ x: e.x + rnd(-.6, .6) * e.sc, z: e.z + rnd(-.6, .6) * e.sc, y: .35, v: 0, xp: e.T.xp / n * (e.T.boss ? 1 : 1), ph: Math.random() * TAU, got: false });
@@ -1595,59 +1604,82 @@ function render() {
 }
 
 /* ------------------------------- HUD Update ------------------------------ */
+// DOM-Schreibzugriffe sind auf dem Handy teuer (Style-Recalc + Paint pro Bild),
+// deshalb wird jeder Wert gepuffert und nur bei echter Änderung gesetzt.
 let hudAcc = 0;
+const _hud = {};
+function setTx(id, v) { if (_hud[id] !== v) { _hud[id] = v; $(id).textContent = v; } }
+function setW(id, v) { const k = id + 'w'; if (_hud[k] !== v) { _hud[k] = v; $(id).style.width = v + '%'; } }
 function updateHud(dt) {
   const p = G.p;
   hudAcc += dt;
-  const hpP = clamp(p.hp / p.maxHp, 0, 1) * 100;
-  $('hpBar').style.width = hpP + '%';
-  $('hpBar').style.background = hpP < 30 ? 'linear-gradient(90deg,#ff2d2d,#ff6b6b)' : 'linear-gradient(90deg,#ff4d4d,#ff8a5c)';
-  $('hpTxt').textContent = Math.max(0, Math.ceil(p.hp)) + ' / ' + Math.round(p.maxHp);
-  $('xpBar').style.width = clamp(p.xp / p.xpNext, 0, 1) * 100 + '%';
-  const dc = p.dashCool > 0 ? p.dashCool / p.dashCd : 0;
-  $('dashRing').style.setProperty('--a', (dc * 360) + 'deg');
-  dashEl.classList.toggle('cool', p.dashCool > 0);
+  const hpF = clamp(p.hp / p.maxHp, 0, 1);
+  setW('hpBar', Math.round(hpF * 1000) / 10);
+  const low = hpF < 0.3;
+  if (_hud.low !== low) {
+    _hud.low = low;
+    $('hpBar').style.background = low ? 'linear-gradient(90deg,#ff2d2d,#ff6b6b)' : 'linear-gradient(90deg,#ff4d4d,#ff8a5c)';
+  }
+  setTx('hpTxt', Math.max(0, Math.ceil(p.hp)) + ' / ' + Math.round(p.maxHp));
+  setW('xpBar', Math.round(clamp(p.xp / p.xpNext, 0, 1) * 1000) / 10);
+
+  const dc = p.dashCool > 0 ? Math.round(p.dashCool / p.dashCd * 60) : 0;
+  if (_hud.dash !== dc) {
+    _hud.dash = dc;
+    $('dashRing').style.setProperty('--a', (dc / 60 * 360) + 'deg');
+    dashEl.classList.toggle('cool', dc > 0);
+  }
   if (hudAcc > 0.12) {
     hudAcc = 0;
-    $('hTime').textContent = fmtTime(G.t);
-    $('hKills').textContent = G.kills;
-    $('hLvl').textContent = p.lvl;
-    $('hWave').textContent = G.wave;
+    setTx('hTime', fmtTime(G.t));
+    setTx('hKills', String(G.kills));
+    setTx('hLvl', String(p.lvl));
+    setTx('hWave', String(G.wave));
+    const bw = G.boss ? 'block' : 'none';
+    if (_hud.boss !== bw) { _hud.boss = bw; $('bossWrap').style.display = bw; }
     if (G.boss) {
-      $('bossWrap').style.display = 'block';
-      $('bossName').textContent = G.boss.name;
-      $('bossBar').style.width = clamp(G.boss.hp / G.boss.maxHp, 0, 1) * 100 + '%';
-    } else $('bossWrap').style.display = 'none';
+      setTx('bossName', G.boss.name);
+      setW('bossBar', Math.round(clamp(G.boss.hp / G.boss.maxHp, 0, 1) * 1000) / 10);
+    }
   }
-  const lowHp = p.hp / p.maxHp < 0.3 ? 0.22 + Math.sin(G.t * 5) * 0.12 : 0;
-  $('dmgFlash').style.opacity = String(Math.max(G.flash * 0.85, lowHp));
+  const lowHp = low ? 0.22 + Math.sin(G.t * 5) * 0.12 : 0;
+  const fl = Math.round(Math.max(G.flash * 0.85, lowHp) * 100) / 100;
+  if (_hud.fl !== fl) { _hud.fl = fl; $('dmgFlash').style.opacity = String(fl); }
 }
 
 /* --------------------------------- Loop ---------------------------------- */
 let lastT = 0, acc = 0, fpsAcc = 0, fpsN = 0;
+let resCool = 0, lowRun = 0, highRun = 0;
 function frame(now) {
   requestAnimationFrame(frame);
   if (!lastT) lastT = now;
   let dt = (now - lastT) / 1000; lastT = now;
-  if (dt > 0.1) dt = 0.1;
+  // Nach Tab-Wechsel oder Pause nicht die verlorene Zeit aufholen
+  if (!(dt > 0)) dt = 1 / 60;
+  if (dt > 0.05) dt = 0.05;
 
   if (G.state === 'play') {
-    // Fixe Schritte für stabile Physik
-    acc += dt;
-    let steps = 0;
-    while (acc >= 1 / 60 && steps < 4) { update(1 / 60); acc -= 1 / 60; steps++; if (G.state !== 'play') break; }
-    if (steps === 0 && acc > 0) { /* warte */ }
-    updateHud(dt);
+    // Ein Update pro gerendertem Bild, mit der echten Bildzeit.
+    // Ein Akkumulator mit festen 1/60-Schritten lässt bei 60 Hz einzelne
+    // Bilder ohne Update durch (und bei 120 Hz jedes zweite) — da gerendert
+    // wird, ohne zwischen zwei Zuständen zu interpolieren, ruckelt das sichtbar.
+    update(dt);
+    if (G.state === 'play') updateHud(dt);
   }
   if (ENGINE_OK && G.p && (G.state === 'play' || G.state === 'levelup' || G.state === 'pause')) render();
 
-  // adaptive Auflösung
+  // Adaptive Auflösung — träge, denn jedes resize() legt den Framebuffer neu an
+  // und kostet selbst ein Ruckeln. Erst nach mehreren schlechten Messfenstern.
   fpsAcc += dt; fpsN++;
-  if (fpsAcc >= 1.2) {
+  if (fpsAcc >= 1.5) {
     const fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0;
-    if (G.state === 'play') {
-      if (fps < 42 && resScale > 0.62) { resScale = Math.max(0.62, resScale - 0.12); resize(); }
-      else if (fps > 57 && resScale < 1) { resScale = Math.min(1, resScale + 0.08); resize(); }
+    if (resCool > 0) { resCool--; lowRun = highRun = 0; }
+    else if (G.state === 'play') {
+      if (fps < 45) { lowRun++; highRun = 0; }
+      else if (fps > 58) { highRun++; lowRun = 0; }
+      else { lowRun = highRun = 0; }
+      if (lowRun >= 2 && resScale > 0.55) { resScale = Math.max(0.55, resScale - 0.15); resize(); resCool = 3; lowRun = 0; }
+      else if (highRun >= 4 && resScale < 1) { resScale = Math.min(1, resScale + 0.1); resize(); resCool = 3; highRun = 0; }
     }
   }
 }
@@ -1695,6 +1727,7 @@ function startGame() {
   G.enemies.length = 0; G.bullets.length = 0; G.ebullets.length = 0; G.orbs.length = 0;
   G.parts.length = 0; G.decals.length = 0; G.pops.length = 0;
   G.shake = 0; G.flash = 0; G.camX = 0; G.camZ = 0;
+  for (const k in _hud) delete _hud[k];
   buildProps();
   for (let i = 0; i < 6; i++) spawnEnemy('walker', rnd(16, 24));
   G.state = 'play';
