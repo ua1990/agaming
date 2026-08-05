@@ -16,9 +16,12 @@ Spracheinstellung des Browsers.
 
 ## Spielprinzip
 
-Top-Down-Survival: Du bewegst dich, **geschossen wird automatisch** auf den
-nächstgelegenen Gegner. Überlebe so lange wie möglich, während die Horde
-immer stärker wird.
+Top-Down-Survival: Du bewegst dich, **geschossen wird automatisch — und zwar in
+Laufrichtung**. Zielen ist damit deine Aufgabe: Positionierung entscheidet,
+vorwärts gehen heißt treffen. Eine Zielhilfe lässt sich nicht erwerben; einzig
+das **Scharfschützengewehr** fängt mit seinem Zielfernrohr Gegner in einem Kegel
+von 54° ein — wer immer es führt. Überlebe so lange wie möglich, während die
+Horde immer stärker wird.
 
 * **Steuerung:** Linke Bildschirmhälfte = Joystick (erscheint, wo du hintippst),
   Button rechts unten = Dash (kurz unverwundbar). Am Desktop: WASD / Pfeiltasten, Leertaste = Dash, Esc = Pause.
@@ -32,16 +35,32 @@ immer stärker wird.
   Waffen sind übersetzt (z. B. Ahmet – „Der Panzer" / „Tank", Schrotflinte /
   Pompalı Tüfek).
 
-## Charaktere
+## Charaktere und Waffen
 
-| Charakter | Rolle | Waffe |
-|---|---|---|
-| Ahmet | Der Panzer | Schrotflinte, viel Leben, langsam |
-| Deniz | Die Schnelle | Doppelpistolen, sehr wendig |
-| Hamza | Der Sprengmeister | Granatwerfer mit Flächenschaden |
-| Mertcan | Der Scharfschütze | Große Reichweite, Durchschlag |
-| Murat | Der Sturm | MP mit extremer Feuerrate |
-| Said | Der Beschützer | Pistole, kreisende Schutzkugeln, Regeneration |
+Charakter und Waffe werden getrennt gewählt — **jeder Charakter kann jede Waffe
+führen**, macht also 36 Kombinationen. Der Charakter bestimmt Leben, Tempo,
+Aussehen und Eigenheiten; die Waffe bestimmt Schaden, Feuerrate und Reichweite.
+Beim Anwählen eines Charakters springt die Auswahl auf seine Stammwaffe; sie ist
+auch beim Aufrufen des Spiels schon gesetzt, es lässt sich also nie ohne Waffe
+starten.
+
+| Charakter | Rolle | Eigenheit | Stammwaffe |
+|---|---|---|---|
+| Ahmet | Der Panzer | 165 HP, langsam | Schrotflinte |
+| Deniz | Die Schnelle | 92 HP, sehr schnell | Doppelpistolen |
+| Hamza | Der Sprengmeister | 118 HP, ausgewogen | Granatwerfer |
+| Mertcan | Der Scharfschütze | +12 % Krit-Chance | Scharfschützengewehr |
+| Murat | Der Sturm | 105 HP, ohne Schwäche | Maschinenpistole |
+| Said | Der Beschützer | Schutzkugeln, Regeneration | Pistole |
+
+| Waffe | Kennzeichen |
+|---|---|
+| Schrotflinte | fünf Kugeln auf einmal, kurze Reichweite |
+| Doppelpistolen | schnell und treffsicher, mittlere Reichweite |
+| Granatwerfer | Flächenschaden, trifft ganze Gruppen |
+| Scharfschützengewehr | weiteste Reichweite, durchbohrt Gegner, **Zielfernrohr (54°)** |
+| Maschinenpistole | Dauerfeuer, streut leicht |
+| Pistole | kräftiger Einzelschuss, gute Reichweite |
 
 ## Klang
 
