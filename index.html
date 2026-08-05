@@ -49,6 +49,7 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
 .bar{flex:1;height:5px;background:#0c1018;border-radius:3px;overflow:hidden}
 .bar i{display:block;height:100%;border-radius:3px}
 .wp{margin-top:8px;font-size:11px;color:#f0c674;font-weight:800}
+.ds{margin-top:3px;font-size:10.5px;color:#93a1b5;font-weight:600;line-height:1.35}
 .hs{margin-top:5px;font-size:10px;color:#6f7d92;font-weight:700}
 
 /* ---- HUD ---- */
@@ -244,10 +245,10 @@ const STR = {
   de: {
     tagline: 'Zombie Survival', start: 'SPIEL STARTEN', fullscreen: 'Vollbild',
     sndOn: '🔊 Ton', sndOff: '🔇 Stumm',
-    hint: 'Bewege dich mit dem linken Daumen ·<br>Geschossen wird automatisch.',
+    hint: 'Bewege dich mit dem linken Daumen ·<br>Geschossen wird automatisch in Laufrichtung.',
     record: (s, t, k) => `🏆 Rekord: <b>${s}</b> Punkte · ${t} · ${k} Kills`,
     chooseFighter: 'Wähle deinen Kämpfer', back: 'Zurück', go: "LOS GEHT'S",
-    tip: 'Tipp: Bleib in Bewegung. Sammle blaue Kristalle für Level-Ups.',
+    tip: 'Du schießt, wohin du läufst. Das Upgrade Zielhilfe nimmt dir das Zielen ab.',
     stHp: 'HP', stSpd: 'Tempo', stDps: 'DPS',
     noRecord: 'Noch kein Rekord', cardBest: (s, t) => `🏆 ${s} Pkt · ${t}`,
     hudTime: 'Zeit', hudKills: 'Kills', hudLevel: 'Level', hudWave: 'Welle', dash: 'DASH',
@@ -265,10 +266,10 @@ const STR = {
   tr: {
     tagline: 'Zombie Survival', start: 'OYUNU BAŞLAT', fullscreen: 'Tam Ekran',
     sndOn: '🔊 Ses', sndOff: '🔇 Sessiz',
-    hint: 'Sol başparmağınla hareket et ·<br>Ateş otomatik.',
+    hint: 'Sol başparmağınla hareket et ·<br>Ateş otomatik, koştuğun yöne.',
     record: (s, t, k) => `🏆 Rekor: <b>${s}</b> puan · ${t} · ${k} öldürme`,
     chooseFighter: 'Savaşçını Seç', back: 'Geri', go: 'HADİ BAŞLAYALIM',
-    tip: 'İpucu: Hareket hâlinde kal. Seviye atlamak için mavi kristalleri topla.',
+    tip: 'Koştuğun yöne ateş edersin. Nişan Yardımı geliştirmesi nişanı senin yerine alır.',
     stHp: 'CAN', stSpd: 'Hız', stDps: 'DPS',
     noRecord: 'Henüz rekor yok', cardBest: (s, t) => `🏆 ${s} puan · ${t}`,
     hudTime: 'Süre', hudKills: 'Öldürme', hudLevel: 'Seviye', hudWave: 'Dalga', dash: 'ATIL',
@@ -802,8 +803,9 @@ const CHARS = [
     id: 'mertcan', name: 'Mertcan', role: { de: 'Der Scharfschütze', tr: 'Keskin Nişancı' }, emoji: '🎯',
     hp: 95, spd: 5.9, skin: [.85, .64, .45], hair: [.23, .16, .10], shirt: [.16, .49, .24], pants: [.20, .23, .19],
     acc: 'capb', accCol: [.14, .35, .18], weapon: { de: 'Scharfschützengewehr', tr: 'Keskin Nişancı Tüfeği' },
+    aimAssist: 1,
     gun: { type: 'snipe', dmg: 36, rate: .80, count: 1, spread: 0, speed: 62, range: 27, size: .2, pierce: 2 },
-    desc: { de: 'Riesige Reichweite, Durchschlag', tr: 'Çok uzun menzil, delip geçer' }
+    desc: { de: 'Weite Sicht, zielt vorne selbst', tr: 'Uzun menzil, önde kendi nişan alır' }
   },
   {
     id: 'murat', name: 'Murat', role: { de: 'Der Sturm', tr: 'Fırtına' }, emoji: '🔥',
@@ -840,6 +842,9 @@ const UPGRADES = [
   { id: 'boom', ic: '🧨', nm: { de: 'Sprengmunition', tr: 'Patlayıcı Mermi' }, ds: { de: 'Treffer explodieren', tr: 'İsabetler patlar' }, max: 3, ap: p => { p.boom += 1; } },
   { id: 'steal', ic: '🧛', nm: { de: 'Lebensraub', tr: 'Can Çalma' }, ds: { de: '+3 % geheiltes Leben', tr: "Verilen hasarın %3'ü can olur" }, max: 4, ap: p => p.lifesteal += 0.03 },
   { id: 'xp', ic: '📘', nm: { de: 'Erfahrung', tr: 'Tecrübe' }, ds: { de: '+22 % EP', tr: '+%22 TP' }, max: 4, ap: p => p.xpMul *= 1.22 },
+  { id: 'aim', ic: '🎯', nm: { de: 'Zielhilfe', tr: 'Nişan Yardımı' },
+    ds: { de: 'Zielt selbst — Winkel wächst je Stufe', tr: 'Kendi nişan alır — açı her kademede büyür' },
+    max: 3, ap: p => p.aimAssist++ },
 ];
 
 /* ------------------------------ Gegner-Typen ----------------------------- */
@@ -878,6 +883,7 @@ function mkPlayer(ch) {
     dmgMul: 1, rateMul: 1, spdMul: 1, rangeMul: 1,
     extraProj: 0, pierce: 0, crit: 0.03, regen: ch.regen || 0, magnet: 2.8,
     dashCd: 3.0, armor: 0, orbs: ch.orbs || 0, boom: 0, lifesteal: ch.lifesteal || 0, xpMul: 1,
+    aimAssist: ch.aimAssist || 0,
     cd: 0, dashT: 0, dashCool: 0, inv: 0, hitFlash: 0,
     lvl: 1, xp: 0, xpNext: 5, walk: 0, alt: 1,
     orbAng: 0, upTaken: {}, bob: 0,
@@ -994,18 +1000,31 @@ function nearCells(x, z, out) {
 }
 
 /* ------------------------------- Schießen -------------------------------- */
+// Öffnungswinkel der Zielhilfe je Stufe (halber Kegel, im Bogenmaß).
+// Stufe 0 heißt: keine Hilfe, es wird stur in Laufrichtung geschossen.
+const AIM_CONE = [0, 0.95, 1.9, Math.PI];
 function fire() {
   const p = G.p, g = p.ch.gun;
   const range = g.range * p.rangeMul;
-  // nächstes Ziel suchen
-  let best = null, bd = range * range;
-  for (let i = 0; i < G.enemies.length; i++) {
-    const e = G.enemies[i];
-    const dx = e.x - p.x, dz = e.z - p.z, d2 = dx * dx + dz * dz;
-    if (d2 < bd) { bd = d2; best = e; }
+  // Grundregel: geschossen wird in Laufrichtung. Die Zielhilfe fängt Gegner in
+  // einem Kegel um diese Richtung ein, der mit jeder Stufe weiter aufgeht.
+  let aim = p.face;
+  if (p.aimAssist > 0) {
+    const cone = AIM_CONE[Math.min(AIM_CONE.length - 1, p.aimAssist)];
+    let best = null, bd = range * range;
+    for (let i = 0; i < G.enemies.length; i++) {
+      const e = G.enemies[i];
+      const dx = e.x - p.x, dz = e.z - p.z, d2 = dx * dx + dz * dz;
+      if (d2 >= bd) continue;
+      if (cone < Math.PI) {
+        const rel = ((Math.atan2(dx, dz) - p.face + Math.PI * 3) % TAU) - Math.PI;
+        if (Math.abs(rel) > cone) continue;
+      }
+      bd = d2; best = e;
+    }
+    if (best) aim = Math.atan2(best.x - p.x, best.z - p.z);
   }
-  if (!best) return;
-  p.aim = Math.atan2(best.x - p.x, best.z - p.z);
+  p.aim = aim;
   if (p.cd > 0) return;
   p.cd = g.rate * p.rateMul;
 
@@ -1080,13 +1099,16 @@ function miniBoom(x, z, radius, dmg) {
   areaDamage(x, z, radius, dmg, 4);
 }
 
-function hurtEnemy(e, dmg, dx, dz, kb) {
+// ohneRaub: Schaden, der ohne Zutun des Spielers entsteht (Schutzkugeln).
+// Lebensraub daraus würde ihn unsterblich machen, sobald viele Gegner den
+// Ring berühren — er heilte dann schneller, als die Horde zuschlagen kann.
+function hurtEnemy(e, dmg, dx, dz, kb, ohneRaub) {
   if (e.dead) return;
   e.hp -= dmg; e.flash = 1;
   const l = Math.hypot(dx, dz) || 1;
   if (kb && !e.T.boss) { e.kb = Math.min(1, (e.kb || 0) + kb / 10); e.kbx = dx / l; e.kbz = dz / l; }
   const p = G.p;
-  if (p.lifesteal > 0) { p.hp = Math.min(p.maxHp, p.hp + dmg * p.lifesteal); }
+  if (p.lifesteal > 0 && !ohneRaub) { p.hp = Math.min(p.maxHp, p.hp + dmg * p.lifesteal); }
   if (e.hp <= 0) killEnemy(e);
 }
 function killEnemy(e) {
@@ -1134,7 +1156,13 @@ function openLevelUp() {
   const avail = UPGRADES.filter(u => (p.upTaken[u.id] || 0) < u.max);
   const chosen = [];
   const pool = avail.slice();
-  for (let i = 0; i < 3 && pool.length; i++) chosen.push(pool.splice((Math.random() * pool.length) | 0, 1)[0]);
+  // Die Zielhilfe entscheidet über den ganzen Lauf, deshalb liegt sie beim
+  // ersten Aufstieg garantiert mit auf dem Tisch — nehmen muss man sie nicht.
+  if (p.lvl <= 2 && !p.upTaken.aim) {
+    const i = pool.findIndex(u => u.id === 'aim');
+    if (i >= 0) chosen.push(pool.splice(i, 1)[0]);
+  }
+  while (chosen.length < 3 && pool.length) chosen.push(pool.splice((Math.random() * pool.length) | 0, 1)[0]);
   if (!chosen.length) { G.lvlQueue = 0; return; }
   G.state = 'levelup';
   buzz(20);
@@ -1421,7 +1449,10 @@ function update(dt) {
           if (dx * dx + dz * dz < rr * rr) {
             if (!e.orbCd || e.orbCd <= 0) {
               e.orbCd = 0.42;
-              hurtEnemy(e, (12 + p.lvl * 2.5) * p.dmgMul, dx, dz, 4);
+              // Bewusst schwach und ab Stufe 15 gedeckelt: die Kugeln treffen
+              // ohne Zielen und wären sonst stärker als jede Waffe, seit in
+              // Laufrichtung geschossen wird. Sie sollen schützen, nicht mähen.
+              hurtEnemy(e, (8 + Math.min(p.lvl, 15) * 1.6) * p.dmgMul, dx, dz, 4, true);
               spawnParts(ox, .9, oz, 3, [.55, .75, 1], 4, .3, .12, 8);
             }
           }
@@ -1921,6 +1952,7 @@ function buildCards() {
       `<div class="st"><b>${t('stSpd')}</b><span class="bar"><i style="width:${clamp((c.spd - 4.6) / 3.0, 0, 1) * 100}%;background:#5cc8ff"></i></span></div>` +
       `<div class="st"><b>${t('stDps')}</b><span class="bar"><i style="width:${clamp((c.gun.dmg * c.gun.count / c.gun.rate) / 90, 0, 1) * 100}%;background:#ffc85c"></i></span></div>` +
       `<div class="wp">${tx(c.weapon)}</div>` +
+      `<div class="ds">${tx(c.desc)}</div>` +
       `<div class="hs">${best ? t('cardBest')(best.score, fmtTime(best.time)) : t('noRecord')}</div>`;
     d.onclick = () => { G.char = c; buildCards(); buzz(8); };
     box.appendChild(d);

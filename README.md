@@ -16,15 +16,17 @@ Spracheinstellung des Browsers.
 
 ## Spielprinzip
 
-Top-Down-Survival: Du bewegst dich, **geschossen wird automatisch** auf den
-nächstgelegenen Gegner. Überlebe so lange wie möglich, während die Horde
-immer stärker wird.
+Top-Down-Survival: Du bewegst dich, **geschossen wird automatisch — und zwar in
+Laufrichtung**. Zielen ist also deine Aufgabe: Positionierung entscheidet.
+Das Upgrade **Zielhilfe** nimmt sie dir stufenweise ab (Kegel von 54° über 109°
+bis rundum) und liegt beim ersten Aufstieg garantiert zur Wahl. Überlebe so
+lange wie möglich, während die Horde immer stärker wird.
 
 * **Steuerung:** Linke Bildschirmhälfte = Joystick (erscheint, wo du hintippst),
   Button rechts unten = Dash (kurz unverwundbar). Am Desktop: WASD / Pfeiltasten, Leertaste = Dash, Esc = Pause.
 * **Level-Ups:** Blaue Kristalle einsammeln, dann eine von drei zufälligen
-  Verbesserungen wählen (16 Upgrades, u. a. Schaden, Feuerrate, Durchschlag,
-  Schutzkugeln, Sprengmunition).
+  Verbesserungen wählen (17 Upgrades, u. a. Zielhilfe, Schaden, Feuerrate,
+  Durchschlag, Schutzkugeln, Sprengmunition).
 * **Gegner:** Walker, Runner, Brute, Spitter und Bomber — Leben, Tempo und
   Schaden skalieren mit der Überlebenszeit. Alle ~105 Sekunden kommt ein Boss.
 * **Highscore:** `Überlebenszeit × 5 + Kills × 10`, pro Charakter lokal gespeichert.
@@ -39,7 +41,7 @@ immer stärker wird.
 | Ahmet | Der Panzer | Schrotflinte, viel Leben, langsam |
 | Deniz | Die Schnelle | Doppelpistolen, sehr wendig |
 | Hamza | Der Sprengmeister | Granatwerfer mit Flächenschaden |
-| Mertcan | Der Scharfschütze | Große Reichweite, Durchschlag |
+| Mertcan | Der Scharfschütze | Große Reichweite, startet mit einer Stufe Zielhilfe |
 | Murat | Der Sturm | MP mit extremer Feuerrate |
 | Said | Der Beschützer | Pistole, kreisende Schutzkugeln, Regeneration |
 
