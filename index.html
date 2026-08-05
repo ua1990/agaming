@@ -55,12 +55,14 @@ h1{font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:-1px;line-heigh
   padding:10px 11px;cursor:pointer;transition:.14s;text-align:left}
 .wcard:active{transform:scale(.97)}
 .wcard.on{border-color:#f0c674;background:linear-gradient(165deg,#2c2718,#171410);box-shadow:0 0 0 3px rgba(240,198,116,.15)}
-.wcard .wn{font-size:14px;font-weight:900;display:flex;align-items:center;gap:7px;line-height:1.2}
+.wcard .wn{font-size:14px;font-weight:900;display:flex;align-items:flex-start;gap:7px;line-height:1.2}
 .wcard .wn i{font-style:normal;font-size:17px;flex:0 0 auto}
+.wcard .wn span{min-width:0;overflow-wrap:anywhere;hyphens:auto}
 .wcard .wd{font-size:10.5px;color:#93a1b5;font-weight:600;margin-top:4px;line-height:1.35}
 .wcard .std{display:flex;align-items:center;gap:6px;font-size:10px;color:#93a1b5;margin-top:6px;font-weight:700}
 .wcard .std b{width:42px;flex:0 0 auto;color:#6f7d92;letter-spacing:-.2px}
 .sig{font-size:9.5px;color:#7dd94f;font-weight:800;margin-top:5px;letter-spacing:.3px}
+.scope{font-size:9.5px;color:#f0c674;font-weight:800;margin-top:5px;letter-spacing:.3px}
 .hs{margin-top:5px;font-size:10px;color:#6f7d92;font-weight:700}
 
 /* ---- HUD ---- */
@@ -261,7 +263,7 @@ const STR = {
     hint: 'Bewege dich mit dem linken Daumen ·<br>Geschossen wird automatisch in Laufrichtung.',
     record: (s, t, k) => `🏆 Rekord: <b>${s}</b> Punkte · ${t} · ${k} Kills`,
     chooseFighter: 'Wähle deinen Kämpfer', chooseWeapon: 'Und jetzt die Waffe',
-    stRange: 'Weite', signature: n => 'Tritt sonst an mit: ' + n, signatureTag: '★ STAMMWAFFE', back: 'Zurück', go: "LOS GEHT'S",
+    stRange: 'Weite', scopeTag: '🎯 ZIELFERNROHR · 54°', signature: n => 'Tritt sonst an mit: ' + n, signatureTag: '★ STAMMWAFFE', back: 'Zurück', go: "LOS GEHT'S",
     tip: 'Du schießt, wohin du läufst — halte die Horde vor dir.',
     stHp: 'HP', stSpd: 'Tempo', stDps: 'DPS',
     noRecord: 'Noch kein Rekord', cardBest: (s, t) => `🏆 ${s} Pkt · ${t}`,
@@ -283,7 +285,7 @@ const STR = {
     hint: 'Sol başparmağınla hareket et ·<br>Ateş otomatik, koştuğun yöne.',
     record: (s, t, k) => `🏆 Rekor: <b>${s}</b> puan · ${t} · ${k} öldürme`,
     chooseFighter: 'Savaşçını Seç', chooseWeapon: 'Şimdi de silah',
-    stRange: 'Menzil', signature: n => 'Normalde şununla çıkar: ' + n, signatureTag: '★ ASIL SİLAHI', back: 'Geri', go: 'HADİ BAŞLAYALIM',
+    stRange: 'Menzil', scopeTag: '🎯 DÜRBÜN · 54°', signature: n => 'Normalde şununla çıkar: ' + n, signatureTag: '★ ASIL SİLAHI', back: 'Geri', go: 'HADİ BAŞLAYALIM',
     tip: 'Koştuğun yöne ateş edersin — sürüyü hep önünde tut.',
     stHp: 'CAN', stSpd: 'Hız', stDps: 'DPS',
     noRecord: 'Henüz rekor yok', cardBest: (s, t) => `🏆 ${s} puan · ${t}`,
@@ -818,8 +820,8 @@ const CHARS = [
     id: 'mertcan', name: 'Mertcan', role: { de: 'Der Scharfschütze', tr: 'Keskin Nişancı' }, emoji: '🎯',
     hp: 95, spd: 5.9, skin: [.85, .64, .45], hair: [.23, .16, .10], shirt: [.16, .49, .24], pants: [.20, .23, .19],
     acc: 'capb', accCol: [.14, .35, .18], wp: 'snipe',
-    aimAssist: 1,
-    desc: { de: 'Einziger, der von selbst zielt (54°)', tr: 'Kendi nişan alan tek karakter (54°)' }
+    crit: .12,
+    desc: { de: 'Trifft oft kritisch (+12 %)', tr: 'Sık sık kritik vurur (+%12)' }
   },
   {
     id: 'murat', name: 'Murat', role: { de: 'Der Sturm', tr: 'Fırtına' }, emoji: '🔥',
@@ -849,6 +851,9 @@ const WEAPONS = [
     gun: { type: 'gren', dmg: 24, rate: .90, count: 1, spread: .04, speed: 22, range: 16.5, size: .3, pierce: 0, splash: 3.9, splashDmg: 33 } },
   { id: 'snipe', emoji: '🎯', nm: { de: 'Scharfschützengewehr', tr: 'Keskin Nişancı Tüfeği' },
     ds: { de: 'Weiteste Reichweite, durchbohrt Gegner', tr: 'En uzun menzil, düşmanları deler' },
+    // Einzige Waffe mit Zielfernrohr: fängt Gegner in einem Kegel von 54° ein,
+    // wer sie führt, muss also nicht mehr genau in Laufrichtung zielen.
+    aimAssist: 1,
     gun: { type: 'snipe', dmg: 36, rate: .80, count: 1, spread: 0, speed: 62, range: 27, size: .2, pierce: 2 } },
   { id: 'smg', emoji: '🔥', nm: { de: 'Maschinenpistole', tr: 'Makineli Tabanca' },
     ds: { de: 'Dauerfeuer, streut leicht', tr: 'Seri atış, hafif dağılır' },
@@ -915,9 +920,9 @@ function mkPlayer(ch, wp) {
     ch, wp, gun: wp.gun, x: 0, z: 0, y: 0, face: 0, aim: 0,
     hp: ch.hp, maxHp: ch.hp, spd: ch.spd,
     dmgMul: 1, rateMul: 1, spdMul: 1, rangeMul: 1,
-    extraProj: 0, pierce: 0, crit: 0.03, regen: ch.regen || 0, magnet: 2.8,
+    extraProj: 0, pierce: 0, crit: 0.03 + (ch.crit || 0), regen: ch.regen || 0, magnet: 2.8,
     dashCd: 3.0, armor: 0, orbs: ch.orbs || 0, boom: 0, lifesteal: ch.lifesteal || 0, xpMul: 1,
-    aimAssist: ch.aimAssist || 0,
+    aimAssist: wp.aimAssist || 0,
     cd: 0, dashT: 0, dashCool: 0, inv: 0, hitFlash: 0,
     lvl: 1, xp: 0, xpNext: 5, walk: 0, alt: 1,
     orbAng: 0, upTaken: {}, bob: 0,
@@ -1035,8 +1040,9 @@ function nearCells(x, z, out) {
 
 /* ------------------------------- Schießen -------------------------------- */
 // Öffnungswinkel einer Zielhilfe (halber Kegel, im Bogenmaß). Erwerben lässt
-// sie sich nicht — nur Mertcan bringt als Scharfschütze Stufe 1 mit. Alle
-// anderen schießen ausnahmslos in Laufrichtung.
+// sie sich nicht — einzig das Scharfschützengewehr bringt mit seinem
+// Zielfernrohr Stufe 1 mit. Mit jeder anderen Waffe wird stur in
+// Laufrichtung geschossen.
 const AIM_CONE = [0, 0.95, 1.9, Math.PI];
 function fire() {
   const p = G.p, g = p.gun;
@@ -1998,10 +2004,11 @@ function buildCards() {
     d.className = 'wcard' + (w === G.wp ? ' on' : '');
     const g = w.gun;
     d.innerHTML =
-      `<div class="wn"><i>${w.emoji}</i>${tx(w.nm)}</div>` +
+      `<div class="wn"><i>${w.emoji}</i><span>${tx(w.nm)}</span></div>` +
       `<div class="wd">${tx(w.ds)}</div>` +
       `<div class="std"><b>${t('stDps')}</b><span class="bar"><i style="width:${clamp(weaponDps(w) / maxDps, 0, 1) * 100}%;background:#ffc85c"></i></span></div>` +
       `<div class="std"><b>${t('stRange')}</b><span class="bar"><i style="width:${clamp(g.range / 27, 0, 1) * 100}%;background:#5cc8ff"></i></span></div>` +
+      (w.aimAssist ? `<div class="scope">${t('scopeTag')}</div>` : '') +
       (w.id === G.char.wp ? `<div class="sig">${t('signatureTag')}</div>` : '');
     d.onclick = () => { G.wp = w; buildCards(); buzz(8); };
     wbox.appendChild(d);
@@ -2011,6 +2018,8 @@ function buildCards() {
 function startGame() {
   initAudio();
   resumeAudio();
+  // Ohne vorherige Auswahl greift die Stammwaffe des Charakters
+  if (!G.wp) G.wp = weaponById(G.char.wp);
   G.p = mkPlayer(G.char, G.wp);
   G.t = 0; G.kills = 0; G.wave = 1; G.spawnAcc = 0; G.nextBoss = 100; G.bossCount = 0; G.boss = null; G.lvlQueue = 0;
   G.enemies.length = 0; G.bullets.length = 0; G.ebullets.length = 0; G.orbs.length = 0;

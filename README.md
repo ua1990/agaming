@@ -19,8 +19,9 @@ Spracheinstellung des Browsers.
 Top-Down-Survival: Du bewegst dich, **geschossen wird automatisch — und zwar in
 Laufrichtung**. Zielen ist damit deine Aufgabe: Positionierung entscheidet,
 vorwärts gehen heißt treffen. Eine Zielhilfe lässt sich nicht erwerben; einzig
-Mertcan bringt als Scharfschütze einen Zielkegel von 54° mit. Überlebe so lange
-wie möglich, während die Horde immer stärker wird.
+das **Scharfschützengewehr** fängt mit seinem Zielfernrohr Gegner in einem Kegel
+von 54° ein — wer immer es führt. Überlebe so lange wie möglich, während die
+Horde immer stärker wird.
 
 * **Steuerung:** Linke Bildschirmhälfte = Joystick (erscheint, wo du hintippst),
   Button rechts unten = Dash (kurz unverwundbar). Am Desktop: WASD / Pfeiltasten, Leertaste = Dash, Esc = Pause.
@@ -46,7 +47,7 @@ Wählt man einen Charakter, ist seine Stammwaffe vorausgewählt.
 | Ahmet | Der Panzer | 165 HP, langsam | Schrotflinte |
 | Deniz | Die Schnelle | 92 HP, sehr schnell | Doppelpistolen |
 | Hamza | Der Sprengmeister | 118 HP, ausgewogen | Granatwerfer |
-| Mertcan | Der Scharfschütze | einziger mit Zielkegel (54°) | Scharfschützengewehr |
+| Mertcan | Der Scharfschütze | +12 % Krit-Chance | Scharfschützengewehr |
 | Murat | Der Sturm | 105 HP, ohne Schwäche | Maschinenpistole |
 | Said | Der Beschützer | Schutzkugeln, Regeneration | Pistole |
 
@@ -55,7 +56,7 @@ Wählt man einen Charakter, ist seine Stammwaffe vorausgewählt.
 | Schrotflinte | fünf Kugeln auf einmal, kurze Reichweite |
 | Doppelpistolen | schnell und treffsicher, mittlere Reichweite |
 | Granatwerfer | Flächenschaden, trifft ganze Gruppen |
-| Scharfschützengewehr | weiteste Reichweite, durchbohrt Gegner |
+| Scharfschützengewehr | weiteste Reichweite, durchbohrt Gegner, **Zielfernrohr (54°)** |
 | Maschinenpistole | Dauerfeuer, streut leicht |
 | Pistole | kräftiger Einzelschuss, gute Reichweite |
 
