@@ -255,7 +255,7 @@ const STR = {
     lostCtx: 'Grafik konnte nicht wiederhergestellt werden – bitte die Seite neu laden.',
   },
   tr: {
-    tagline: 'Zombi Hayatta Kalma', start: 'OYUNU BAŞLAT', fullscreen: 'Tam Ekran',
+    tagline: 'Zombie Survival', start: 'OYUNU BAŞLAT', fullscreen: 'Tam Ekran',
     sndOn: '🔊 Ses', sndOff: '🔇 Sessiz',
     hint: 'Sol başparmağınla hareket et ·<br>Ateş otomatik.',
     record: (s, t, k) => `🏆 Rekor: <b>${s}</b> puan · ${t} · ${k} öldürme`,
@@ -669,7 +669,15 @@ function sfx(type, vol = 1) {
     }
   } catch (e) { }
 }
-function buzz(ms) { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) { } } }
+// Gedrosselt: bei Kettenexplosionen würde das Handy sonst durchgehend brummen
+let lastBuzz = -1;
+function buzz(ms) {
+  if (!navigator.vibrate) return;
+  const n = performance.now();
+  if (n - lastBuzz < 90) return;
+  lastBuzz = n;
+  try { navigator.vibrate(ms); } catch (e) { }
+}
 
 /* ------------------------------- Charaktere ------------------------------ */
 const CHARS = [
@@ -936,22 +944,44 @@ function fire() {
   sfx('shot', g.type === 'smg' ? .5 : g.type === 'shot' ? 1 : .8);
 }
 
+function areaDamage(x, z, radius, dmg, kb) {
+  // Bewusst ein frisches Array: ein hier sterbender Bomber ruft areaDamage
+  // erneut auf, ein geteilter Puffer würde die laufende Schleife überschreiben.
+  const cells = nearCells(x, z, []);
+  const r2 = radius * radius;
+  for (let i = 0; i < cells.length; i++) {
+    const arr = cells[i];
+    for (let j = 0; j < arr.length; j++) {
+      const e = arr[j];
+      if (e.dead) continue;
+      const dx = e.x - x, dz = e.z - z, d2 = dx * dx + dz * dz;
+      if (d2 < r2) {
+        const f = 1 - Math.sqrt(d2) / radius;
+        hurtEnemy(e, dmg * (0.45 + 0.55 * f), dx, dz, kb);
+      }
+    }
+  }
+}
+
+/* Große Explosion: Granate, Bomber, Bosstod — selten genug für vollen Effekt. */
 function explode(x, z, radius, dmg, col) {
   spawnParts(x, .6, z, 24, col || [1, .55, .18], 12, .55, .30, 16);
   spawnParts(x, .4, z, 10, [.15, .15, .18], 6, .9, .34, 3);
   addDecal(x, z, radius * 1.05, [.07, .05, .04], 14);
-  G.shake = Math.min(G.shake + .75, 1.6);
+  G.shake = Math.min(G.shake + .75, 1.35);
   sfx('boom', .8); buzz(28);
-  const cells = nearCells(x, z, []);
-  const r2 = radius * radius;
-  for (const arr of cells) for (const e of arr) {
-    if (e.dead) continue;
-    const dx = e.x - x, dz = e.z - z, d2 = dx * dx + dz * dz;
-    if (d2 < r2) {
-      const f = 1 - Math.sqrt(d2) / radius;
-      hurtEnemy(e, dmg * (0.45 + 0.55 * f), dx, dz, 7);
-    }
-  }
+  areaDamage(x, z, radius, dmg, 7);
+}
+
+/* Sprengmunition löst bei JEDEM Treffer aus — bei Dauerfeuer über zehnmal pro
+   Sekunde. Deshalb bewusst sparsam: kaum Wackeln, keine Vibration, kein Decal,
+   wenige Partikel und ein gedrosselter Ton. Schaden bleibt unverändert. */
+let lastBoomSfx = -1;
+function miniBoom(x, z, radius, dmg) {
+  spawnParts(x, .55, z, 5, [1, .62, .22], 7, .32, .19, 15);
+  G.shake = Math.min(G.shake + .08, 1.35);
+  if (G.t - lastBoomSfx > 0.14) { lastBoomSfx = G.t; sfx('boom', .3); }
+  areaDamage(x, z, radius, dmg, 4);
 }
 
 function hurtEnemy(e, dmg, dx, dz, kb) {
@@ -1254,7 +1284,7 @@ function update(dt) {
             hurtEnemy(e, b.dmg, b.vx, b.vz, b.crit ? 5 : 3);
             spawnParts(b.x, b.y, b.z, b.crit ? 8 : 4, b.crit ? [1, .9, .4] : [.75, .2, .2], 5, .32, .13, 12);
             if (b.crit) popText(e.x, e.z, 'KRIT', '#ffd76a');
-            if (G.p.boom > 0) explode(b.x, b.z, 1.5 + G.p.boom * .5, b.dmg * .55 * G.p.boom, [1, .6, .2]);
+            if (G.p.boom > 0) miniBoom(b.x, b.z, 1.5 + G.p.boom * .5, b.dmg * .55 * G.p.boom);
             b.hit.push(e);
             if (b.hit.length > b.pierce) { dead = true; break outer; }
           }
